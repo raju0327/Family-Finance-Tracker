@@ -1208,6 +1208,45 @@ function setupEventListeners() {
     applyCurrency(currencySelect.value);
   });
 
+  // Check & Install Updates click listener
+  const btnUpdateApp = document.getElementById('btn-update-app');
+  if (btnUpdateApp) {
+    btnUpdateApp.addEventListener('click', () => {
+      showToast("Checking for updates on GitHub...");
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          if (registrations.length === 0) {
+            showToast("Cache refreshed. Reloading...");
+            setTimeout(() => {
+              window.location.reload(true);
+            }, 1000);
+            return;
+          }
+          
+          let checked = 0;
+          registrations.forEach(reg => {
+            reg.update().then(() => {
+              checked++;
+              if (checked === registrations.length) {
+                showToast("Updates installed! Reloading app...");
+                setTimeout(() => {
+                  window.location.reload(true);
+                }, 1200);
+              }
+            }).catch(err => {
+              console.error("SW Update fail:", err);
+              window.location.reload(true);
+            });
+          });
+        });
+      } else {
+        setTimeout(() => {
+          window.location.reload(true);
+        }, 1000);
+      }
+    });
+  }
+
   // Toggle Accordions inside settings
   btnToggleAddProfile.addEventListener('click', () => {
     const isHidden = addProfileForm.style.display === 'none' || !addProfileForm.style.display;
