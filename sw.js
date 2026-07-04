@@ -1,21 +1,7 @@
-const CACHE_NAME = 'family-finance-v1';
-const ASSETS = [
-  './index.html',
-  './styles.css',
-  './js/app.js',
-  './js/charts.js',
-  './js/mockData.js',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
-];
+const CACHE_NAME = 'family-finance-v2';
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS);
-    })
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
@@ -30,12 +16,23 @@ self.addEventListener('activate', e => {
       );
     })
   );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(response => {
-      return response || fetch(e.request);
+    fetch(e.request).then(response => {
+      // If a valid network response is returned, cache it dynamically
+      if (response && response.status === 200 && response.type === 'basic') {
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(e.request, responseClone);
+        });
+      }
+      return response;
+    }).catch(() => {
+      // Fallback to cache if network fails (offline support)
+      return caches.match(e.request);
     })
   );
 });

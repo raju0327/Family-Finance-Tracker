@@ -229,8 +229,10 @@ const codeSnippetBox = document.getElementById('code-snippet-box');
 function init() {
   // Register Service Worker for PWA compliance
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('Service Worker Registered'))
+    const isGithub = window.location.hostname.includes('github.io');
+    const swPath = isGithub ? '/Finance-Tracker/sw.js' : './sw.js';
+    navigator.serviceWorker.register(swPath)
+      .then(() => console.log('Service Worker Registered:', swPath))
       .catch(err => console.error('Service Worker Registry Failed:', err));
   }
 
