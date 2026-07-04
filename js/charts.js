@@ -32,6 +32,7 @@ window.Charts = {
       const percentage = (seg.value / total) * 100;
       spectrumHtml += `
         <div class="spectrum-segment" 
+             data-cat-id="${seg.id}"
              style="width: ${percentage}%; background: ${seg.color}; height: 100%;" 
              title="${seg.label}: ${currencySymbol}${seg.value.toFixed(2)} (${percentage.toFixed(0)}%)"></div>
       `;
@@ -53,7 +54,7 @@ window.Charts = {
         const percentage = (seg.value / total) * 100;
         
         listHtml += `
-          <div class="spectrum-list-item" style="display: flex; flex-direction: column; gap: 6px;">
+          <div class="spectrum-list-item" data-cat-id="${seg.id}" style="display: flex; flex-direction: column; gap: 6px; cursor: pointer;">
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
               <span style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--apple-text);">
                 <span style="width: 8px; height: 8px; border-radius: 50%; background: ${seg.color}; display: inline-block;"></span>

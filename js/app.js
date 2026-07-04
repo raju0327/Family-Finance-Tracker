@@ -444,6 +444,7 @@ function updateMetricsAndCharts() {
 
   const donutSegments = Object.keys(categorySums).map(k => {
     return {
+      id: k,
       value: categorySums[k],
       color: categories[k].color,
       label: categories[k].name
@@ -637,6 +638,13 @@ function deleteTransaction(id) {
     syncTransactionToGoogleSheet('delete', tx);
     
     renderAll();
+    
+    // Refresh category modal details if currently open
+    const catOverlay = document.getElementById('category-details-overlay');
+    if (catOverlay && catOverlay.classList.contains('active') && tx.type === 'expense') {
+      openCategoryDetails(tx.categoryId);
+    }
+    
     showToast(`Transaction "${tx.description}" deleted.`);
   }
 }
@@ -1342,6 +1350,40 @@ function setupEventListeners() {
     codeSnippetBox.style.display = isHidden ? 'block' : 'none';
     btnShowCode.innerText = isHidden ? 'Hide Deployment Code' : 'Show Deployment Code';
   });
+
+  // Modal controls: Category Details
+  const catOverlay = document.getElementById('category-details-overlay');
+  const btnCloseCatModal = document.getElementById('btn-close-cat-modal');
+  
+  if (btnCloseCatModal && catOverlay) {
+    btnCloseCatModal.addEventListener('click', () => {
+      catOverlay.classList.remove('active');
+    });
+    catOverlay.addEventListener('click', (e) => {
+      if (e.target === catOverlay) catOverlay.classList.remove('active');
+    });
+  }
+
+  // Event delegation for chart/list clicks
+  const chartContainer = document.getElementById('donut-chart-container');
+  const legendContainer = document.getElementById('donut-legend');
+  
+  if (chartContainer) {
+    chartContainer.addEventListener('click', handleChartClick);
+  }
+  if (legendContainer) {
+    legendContainer.addEventListener('click', handleChartClick);
+  }
+
+  function handleChartClick(e) {
+    const item = e.target.closest('.spectrum-segment') || e.target.closest('.spectrum-list-item');
+    if (item) {
+      const catId = item.getAttribute('data-cat-id');
+      if (catId) {
+        openCategoryDetails(catId);
+      }
+    }
+  }
 }
 
 // --- UTILS ---
@@ -1402,6 +1444,64 @@ function hexToRgb(hex) {
   return result ? 
     `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` 
     : '255, 255, 255';
+}
+
+function openCategoryDetails(catId) {
+  const cat = categories[catId];
+  if (!cat) return;
+  
+  const overlay = document.getElementById('category-details-overlay');
+  const titleName = document.getElementById('cat-modal-name');
+  const iconBadge = document.getElementById('cat-modal-icon-badge');
+  const summaryBox = document.getElementById('cat-modal-summary-box');
+  const txList = document.getElementById('cat-modal-tx-list');
+  
+  if (!overlay || !titleName || !iconBadge || !summaryBox || !txList) return;
+  
+  // Setup header
+  titleName.innerText = cat.name;
+  iconBadge.style.background = cat.color;
+  iconBadge.innerHTML = `<i class="fas ${cat.icon}"></i>`;
+  
+  // Filter category transactions
+  const filtered = getFilteredTransactions().filter(t => t.categoryId === catId && t.type === 'expense');
+  const spent = filtered.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+  const limit = budgets[catId] || 0;
+  const remaining = Math.max(limit - spent, 0);
+  const percent = limit > 0 ? ((spent / limit) * 100).toFixed(0) : 0;
+  
+  // Build summary box
+  summaryBox.innerHTML = `
+    <div style="display: flex; justify-content: space-between;">
+      <span>Total Spent:</span>
+      <strong>${currencySymbol}${spent.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--apple-border); padding-top: 6px;">
+      <span>Monthly Budget:</span>
+      <span>${currencySymbol}${limit.toLocaleString()} (${percent}% Used)</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--apple-border); padding-top: 6px; font-weight: 600; color: ${remaining === 0 && limit > 0 ? 'var(--apple-red)' : 'var(--apple-text)'};">
+      <span>Remaining Budget:</span>
+      <span>${currencySymbol}${remaining.toLocaleString()}</span>
+    </div>
+  `;
+  
+  // Build transaction items
+  if (filtered.length === 0) {
+    txList.innerHTML = `
+      <div class="empty-state" style="padding: 20px 0;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <p style="font-size: 0.65rem;">No transactions in this category</p>
+      </div>
+    `;
+  } else {
+    txList.innerHTML = filtered.map(t => getTransactionRowHTML(t)).join('');
+    attachDeleteHandlers();
+  }
+  
+  overlay.classList.add('active');
 }
 
 window.addEventListener('DOMContentLoaded', init);
