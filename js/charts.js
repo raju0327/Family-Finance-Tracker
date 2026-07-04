@@ -17,66 +17,64 @@ window.Charts = {
       return;
     }
 
-    const radius = 38;
-    const strokeWidth = 8;
+    // Sort segments so largest is the outermost ring
+    const activeSegments = segments.filter(s => s.value > 0).sort((a, b) => b.value - a.value);
+
     const cx = 50;
     const cy = 50;
-    const circumference = 2 * Math.PI * radius; // ~238.76
+    const strokeWidth = 5.2;
 
-    let currentRotation = -90;
     let svgContent = `
       <svg viewBox="0 0 100 100" class="donut-svg">
         <defs>
-          <filter id="glow-heavy" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
+          <linearGradient id="glow-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="var(--apple-blue)" stop-opacity="0.15"></stop>
+            <stop offset="100%" stop-color="var(--apple-purple)" stop-opacity="0.05"></stop>
+          </linearGradient>
         </defs>
-        <!-- Base Background Circle -->
-        <circle cx="${cx}" cy="${cy}" r="${radius}" 
-                stroke="rgba(255, 255, 255, 0.03)" 
-                stroke-width="${strokeWidth}" 
-                fill="transparent" />
     `;
 
-    segments.forEach((seg) => {
+    activeSegments.forEach((seg, idx) => {
+      // Outermost ring has radius 40, next has 32.5, 25, 17.5
+      const radius = 40 - (idx * 7.5);
+      if (radius < 10) return; // avoid too tiny rings
+      
+      const circumference = 2 * Math.PI * radius;
       const percentage = seg.value / total;
       const strokeLength = percentage * circumference;
       const strokeOffset = circumference - strokeLength;
-      const rotation = currentRotation;
-      
-      // Increment rotation for next segment
-      currentRotation += percentage * 360;
 
-      if (seg.value > 0) {
-        svgContent += `
-          <circle cx="${cx}" cy="${cy}" r="${radius}" 
-                  stroke="${seg.color}" 
-                  stroke-width="${strokeWidth}" 
-                  stroke-dasharray="${circumference}" 
-                  stroke-dashoffset="${strokeOffset}" 
-                  stroke-linecap="round"
-                  fill="transparent" 
-                  transform="rotate(${rotation} ${cx} ${cy})"
-                  class="donut-segment"
-                  style="--seg-color: ${seg.color}"
-                  data-label="${seg.label}"
-                  data-value="${seg.value}"
-                  data-percent="${(percentage * 100).toFixed(1)}%">
-            <title>${seg.label}: ${currencySymbol}${seg.value.toFixed(2)} (${(percentage * 100).toFixed(1)}%)</title>
-          </circle>
-        `;
-      }
+      svgContent += `
+        <!-- Background Track Ring -->
+        <circle cx="${cx}" cy="${cy}" r="${radius}" 
+                stroke="var(--apple-border)" 
+                stroke-width="${strokeWidth}" 
+                stroke-opacity="0.25"
+                fill="transparent" />
+        <!-- Active Progress Ring -->
+        <circle cx="${cx}" cy="${cy}" r="${radius}" 
+                stroke="${seg.color}" 
+                stroke-width="${strokeWidth}" 
+                stroke-dasharray="${circumference}" 
+                stroke-dashoffset="${strokeOffset}" 
+                stroke-linecap="round"
+                fill="transparent" 
+                transform="rotate(-90 ${cx} ${cy})"
+                class="donut-segment"
+                style="--seg-color: ${seg.color}; transition: stroke-dashoffset 0.8s ease-in-out;"
+                data-label="${seg.label}"
+                data-value="${seg.value}"
+                data-percent="${(percentage * 100).toFixed(0)}%">
+          <title>${seg.label}: ${currencySymbol}${seg.value.toFixed(2)} (${(percentage * 100).toFixed(1)}%)</title>
+        </circle>
+      `;
     });
 
-    // Add center text
+    // Add center summary text
     svgContent += `
-        <circle cx="${cx}" cy="${cy}" r="${radius - strokeWidth/2 - 2}" fill="rgba(10, 12, 22, 0.6)" backdrop-filter="blur(5px)" />
-        <text x="${cx}" y="${cy - 2}" text-anchor="middle" class="donut-center-title">TOTAL</text>
-        <text x="${cx}" y="${cy + 7}" text-anchor="middle" class="donut-center-value">${currencySymbol}${total.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</text>
+        <circle cx="${cx}" cy="${cy}" r="11" fill="var(--apple-bg)" stroke="var(--apple-border)" stroke-width="1" />
+        <text x="${cx}" y="${cy - 2.5}" text-anchor="middle" class="donut-center-title" style="font-size: 3.5px; font-weight: 700; fill: var(--apple-text-secondary); letter-spacing: 0.3px;">EXPENSES</text>
+        <text x="${cx}" y="${cy + 3.5}" text-anchor="middle" class="donut-center-value" style="font-size: 5px; font-weight: 800; fill: var(--apple-text);">${currencySymbol}${total.toLocaleString(undefined, {maximumFractionDigits: 0})}</text>
       </svg>
     `;
 
