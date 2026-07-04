@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Family Finance Tracker | Ledger</title>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css?v=1.0.2">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+  <!-- Device Simulator Shell (Clean Bezel-less Border Frame) -->
+  <div class="device-shell">
+    
+    <div class="app-container">
+      
+      <!-- System Status Bar -->
+      <div class="status-bar">
+        <span id="system-time">10:42 PM</span>
+        <div class="status-bar-right">
+          <i class="fas fa-signal"></i>
+          <span style="font-size: 0.65rem;">5G</span>
+          <i class="fas fa-wifi"></i>
+          <i class="fas fa-battery-full"></i>
+        </div>
+      </div>
+
+      <!-- App Header -->
+      <header class="app-header">
+        <div class="brand">
+          <h1>Family Finance</h1>
+          <span>Family Expense Tracker</span>
+        </div>
+        <div style="display: flex; gap: 14px; align-items: center;">
+          <button id="btn-reset-data" class="btn-link" style="color: var(--apple-blue);" title="Sync from Google Sheets">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+          <button id="btn-open-settings" class="btn-link" style="color: var(--apple-blue);" title="Settings Menu">
+            <i class="fas fa-cog" style="font-size: 1.15rem;"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Family Members Slider -->
+      <section class="members-slider" id="members-container">
+        <!-- Loaded Dynamically by JavaScript -->
+      </section>
+
+      <!-- Toast Notification Area -->
+      <div class="toast-container" id="toast-container"></div>
+
+      <!-- Main Scrollable App Views -->
+      <main class="app-content">
+        
+        <!-- ================= DASHBOARD VIEW ================= -->
+        <div id="dashboard-view" class="view-panel active">
+          <!-- Total Balance Card -->
+          <div class="glass-panel balance-card">
+            <!-- Premium Card Vector Wave Overlay -->
+            <div class="card-vector-overlay">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d="M0,60 Q25,40 50,60 T100,60 L100,100 L0,100 Z" fill="url(#card-wave-gradient)"></path>
+                <defs>
+                  <linearGradient id="card-wave-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="var(--apple-blue)" stop-opacity="0.08"></stop>
+                    <stop offset="100%" stop-color="var(--apple-purple)" stop-opacity="0.02"></stop>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <span class="balance-label" style="position: relative; z-index: 2;">Total Balance</span>
+            <div class="balance-amount" id="total-balance" style="position: relative; z-index: 2;">₹0.00</div>
+            <div class="balance-details" style="position: relative; z-index: 2;">
+              <div class="bal-detail-item">
+                <span>Income</span>
+                <p class="text-income" id="total-income">+₹0</p>
+              </div>
+              <div class="bal-detail-item">
+                <span>Expenses</span>
+                <p class="text-expense" id="total-expense">-₹0</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Spending Donut Chart -->
+          <div class="glass-panel">
+            <div class="chart-header">
+              <h3>Expenses by Category</h3>
+              <span class="balance-label">Monthly</span>
+            </div>
+            <div id="donut-chart-container"></div>
+            <div class="chart-legend" id="donut-legend"></div>
+          </div>
+
+          <!-- Spending Trend Line Chart -->
+          <div class="glass-panel">
+            <div class="chart-header">
+              <h3>Monthly Spending Trend</h3>
+              <span class="balance-label">Timeline</span>
+            </div>
+            <div id="line-chart-container"></div>
+          </div>
+
+          <!-- Recent Transactions -->
+          <div class="glass-panel">
+            <div class="list-header">
+              <h3>Recent Transactions</h3>
+              <button class="btn-link nav-trigger" data-target="ledger-view">View All</button>
+            </div>
+            <div class="transaction-list" id="recent-transactions-container">
+              <!-- Loaded Dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= TRANSACTIONS LEDGER VIEW ================= -->
+        <div id="ledger-view" class="view-panel">
+          <!-- Search Control -->
+          <div class="glass-panel" style="padding: 10px 12px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <input type="text" id="search-tx" class="glass-input" placeholder="Search transactions..." style="padding: 8px 12px; font-size: 0.75rem;">
+            </div>
+          </div>
+
+          <!-- Transaction List -->
+          <div class="glass-panel">
+            <div class="list-header">
+              <h3>Transactions Log</h3>
+              <span class="balance-label" id="tx-count">0 Records</span>
+            </div>
+            <div class="transaction-list" id="full-transactions-container">
+              <!-- Loaded Dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= BUDGET VIEW ================= -->
+        <div id="budget-view" class="view-panel">
+          <!-- Total Budget Progress Summary -->
+          <div class="glass-panel">
+            <div class="chart-header">
+              <h3>Budget Overview</h3>
+              <span class="balance-label" id="total-budget-ratio">0% Used</span>
+            </div>
+            <div class="progress-track" style="height: 6px; margin-bottom: 8px;">
+              <div class="progress-bar" id="total-budget-progress" style="--cat-color: var(--apple-blue)"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--apple-gray);">
+              <span id="total-budget-spent">₹0 Spent</span>
+              <span id="total-budget-limit">of ₹0 limit</span>
+            </div>
+          </div>
+
+          <!-- Individual Category Budgets -->
+          <div class="glass-panel">
+            <div class="chart-header">
+              <h3>Category Budgets</h3>
+            </div>
+            <div class="budget-grid" id="budgets-container">
+              <!-- Loaded Dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SAVINGS GOALS VIEW ================= -->
+        <div id="goals-view" class="view-panel">
+          <div class="glass-panel" style="background: none; border: none; box-shadow: none; padding: 0;">
+            <div class="chart-header" style="margin-bottom: 12px;">
+              <h3>Savings Goals</h3>
+            </div>
+            <div id="goals-container" style="display: flex; flex-direction: column; gap: 14px;">
+              <!-- Loaded Dynamically -->
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Bottom Navigation Bar -->
+      <nav class="bottom-nav">
+        <a href="#" class="nav-item active nav-trigger" data-target="dashboard-view">
+          <i class="fas fa-chart-bar"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item nav-trigger" data-target="ledger-view">
+          <i class="fas fa-list-ul"></i>
+          <span>Ledger</span>
+        </a>
+        
+        <!-- Floating Add Transaction Button -->
+        <button class="fab-btn" id="btn-open-add-tx" title="Add Transaction">
+          <i class="fas fa-plus"></i>
+        </button>
+        
+        <a href="#" class="nav-item nav-trigger" data-target="budget-view">
+          <i class="fas fa-chart-pie"></i>
+          <span>Budgets</span>
+        </a>
+        <a href="#" class="nav-item nav-trigger" data-target="goals-view">
+          <i class="fas fa-bullseye"></i>
+          <span>Goals</span>
+        </a>
+      </nav>
+
+    </div>
+
+    <!-- Settings Drawer Overlay -->
+    <div class="settings-drawer" id="settings-drawer">
+      <div class="drawer-header">
+        <h3>Settings</h3>
+        <button class="btn-close-drawer" id="btn-close-settings">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="drawer-body">
+        <!-- Section 1: Themes Dropdown -->
+        <div class="settings-section">
+          <h4>Visual Theme</h4>
+          <select id="theme-select" class="glass-select" style="width: 100%;">
+            <option value="modern-light" selected>Modern Minimalist (Light)</option>
+            <option value="modern-dark">Modern Minimalist (Dark)</option>
+            <option value="futuristic">Futuristic Glassmorphic</option>
+          </select>
+        </div>
+        
+        <!-- Section 2: Currency Settings -->
+        <div class="settings-section">
+          <h4>Currency Symbol</h4>
+          <select id="currency-select" class="glass-select" style="width: 100%;">
+            <option value="INR" selected>Indian Rupee (₹)</option>
+            <option value="USD">US Dollar ($)</option>
+            <option value="EUR">Euro (€)</option>
+            <option value="GBP">British Pound (£)</option>
+          </select>
+        </div>
+        
+        <!-- Section 3: Profile Settings -->
+        <div class="settings-section">
+          <h4>Family Members</h4>
+          <div class="profiles-edit-list" id="settings-profiles-list">
+            <!-- Dynamically loaded -->
+          </div>
+          
+          <button class="btn-link" id="btn-toggle-add-profile-form" style="margin-top: 10px; font-weight: 600;">
+            + Add Family Member
+          </button>
+          
+          <form id="add-profile-form" style="display: none; flex-direction: column; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--apple-border);">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" id="profile-name-input" class="glass-input" required placeholder="e.g. Grandpa">
+            </div>
+            <div class="form-group">
+              <label>Role</label>
+              <input type="text" id="profile-role-input" class="glass-input" required placeholder="e.g. Grandfather">
+            </div>
+            <div class="form-group">
+              <label>Avatar Emoji</label>
+              <input type="text" id="profile-avatar-input" class="glass-input" required placeholder="👴" maxlength="2" style="font-size: 1.2rem;">
+            </div>
+            <div class="form-group">
+              <label>Avatar Color</label>
+              <select id="profile-color-select" class="glass-select">
+                <option value="#007aff">Deep Blue</option>
+                <option value="#5856d6">Deep Purple</option>
+                <option value="#ff9500">Deep Orange</option>
+                <option value="#34c759">Deep Green</option>
+                <option value="#ff3b30">Deep Red</option>
+              </select>
+            </div>
+            <button type="submit" class="glass-submit-btn" style="padding: 10px;">Create Member</button>
+          </form>
+        </div>
+
+        <!-- Section 4: Category Additions -->
+        <div class="settings-section">
+          <h4>Expense Categories</h4>
+          <button class="btn-link" id="btn-toggle-add-cat-form" style="margin-bottom: 10px; font-weight: 600;">
+            + Create New Category
+          </button>
+          
+          <form id="add-category-form" style="display: none; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--apple-border);">
+            <div class="form-group">
+              <label>Category Key (lowercase)</label>
+              <input type="text" id="cat-id-input" class="glass-input" required placeholder="e.g. gifts" pattern="[a-z0-9]+">
+            </div>
+            <div class="form-group">
+              <label>Category Name</label>
+              <input type="text" id="cat-name-input" class="glass-input" required placeholder="e.g. Gifts">
+            </div>
+            <div class="form-group">
+              <label>Icon Class (FontAwesome)</label>
+              <input type="text" id="cat-icon-input" class="glass-input" required placeholder="fa-gift">
+            </div>
+            <div class="form-group">
+              <label>Category Color</label>
+              <input type="color" id="cat-color-input" class="glass-input" value="#007aff" style="padding: 4px; height: 40px; border: none; background: transparent; cursor: pointer;">
+            </div>
+            <div class="form-group">
+              <label>Monthly Budget Limit</label>
+              <input type="number" id="cat-budget-input" class="glass-input" value="10000" min="0">
+            </div>
+            <button type="submit" class="glass-submit-btn" style="padding: 10px;">Create Category</button>
+          </form>
+        </div>
+
+        <!-- Section 5: Google Sheets Integration -->
+        <div class="settings-section">
+          <h4>Google Sheets Sync</h4>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <span class="balance-label" style="font-size: 0.75rem;">Enable Sheets Sync</span>
+            <label class="switch">
+              <input type="checkbox" id="sheet-sync-toggle">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Google Web App URL</label>
+            <input type="url" id="sheet-url-input" class="glass-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size: 0.75rem;">
+          </div>
+          <button id="btn-test-sheet" class="glass-submit-btn" style="padding: 10px; background: rgba(0,0,0,0.02); border: 1px solid var(--apple-border); width: 100%; color: var(--apple-blue); margin-top: 5px;">
+            Test Sync Status
+          </button>
+
+          <div style="margin-top: 15px; background: rgba(0,0,0,0.02); padding: 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--apple-border);">
+            <span style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--apple-blue); display: block; margin-bottom: 6px;">Setup Guide:</span>
+            <ol style="font-size: 0.65rem; color: var(--apple-gray); padding-left: 14px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
+              <li>Create a Google Sheet.</li>
+              <li>Extensions > Apps Script.</li>
+              <li>Paste script deployment snippet.</li>
+              <li>Deploy > New Deployment.</li>
+              <li>Web app -> Execute: "Me", Access: "Anyone".</li>
+              <li>Copy and paste the Web App URL here.</li>
+            </ol>
+            <button class="btn-link" id="btn-show-code" style="font-size: 0.65rem;">Show Deployment Code</button>
+            <pre id="code-snippet-box" style="display: none; margin-top: 8px; font-size: 0.55rem; background: #fafafa; padding: 8px; border-radius: 4px; overflow-x: auto; color: #1c1e21; font-family: monospace; border: 1px solid var(--apple-border); user-select: all; cursor: pointer; max-height: 120px;"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Add Transaction -->
+  <div class="modal-overlay" id="add-transaction-overlay">
+    <div class="glass-modal">
+      <div class="modal-header">
+        <h3>Add Transaction</h3>
+        <button class="btn-close-modal" id="btn-close-add-tx">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="add-transaction-form" onsubmit="return false;">
+        <!-- Income/Expense Toggle -->
+        <div class="form-group">
+          <label>Transaction Type</label>
+          <div class="toggle-type-container">
+            <button type="button" class="toggle-btn active expense" id="type-expense-btn">Expense</button>
+            <button type="button" class="toggle-btn income" id="type-income-btn">Income</button>
+          </div>
+        </div>
+
+        <!-- Amount -->
+        <div class="form-group">
+          <label for="tx-amount-input" id="tx-amount-label">Amount (₹)</label>
+          <input type="number" id="tx-amount-input" class="glass-input" required min="0.01" step="0.01" placeholder="0.00" style="font-weight: 600; font-size: 1.1rem; color: var(--apple-blue);">
+        </div>
+
+        <!-- Category Selector -->
+        <div class="form-group" id="form-group-category">
+          <label for="tx-category-select">Category</label>
+          <select id="tx-category-select" class="glass-select" required>
+            <!-- Loaded Dynamically -->
+          </select>
+        </div>
+
+        <!-- Family Member Selector -->
+        <div class="form-group">
+          <label for="tx-member-select">Family Member</label>
+          <select id="tx-member-select" class="glass-select" required>
+            <!-- Loaded Dynamically -->
+          </select>
+        </div>
+
+        <!-- Date -->
+        <div class="form-group">
+          <label for="tx-date-input">Date</label>
+          <input type="date" id="tx-date-input" class="glass-input" required>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="tx-desc-input">Description</label>
+          <input type="text" id="tx-desc-input" class="glass-input" required placeholder="e.g. Milk & Coffee">
+        </div>
+
+        <button type="submit" class="glass-submit-btn">Add Transaction</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Savings Goal Contribution -->
+  <div class="modal-overlay" id="goal-contribution-overlay">
+    <div class="glass-modal" style="max-height: 50%;">
+      <div class="modal-header">
+        <h3>Goal Contribution</h3>
+        <button class="btn-close-modal" id="btn-close-goal-modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="goal-contribution-form" onsubmit="return false;">
+        <input type="hidden" id="contribution-goal-id">
+        <div class="form-group">
+          <label id="contribution-goal-label">Contribute Amount</label>
+          <input type="number" id="contribution-amount-input" class="glass-input" required min="1" step="1" placeholder="0" style="font-weight: 600; font-size: 1.1rem; color: var(--apple-green);">
+        </div>
+        <button type="submit" class="glass-submit-btn" style="background: var(--apple-green); box-shadow: 0 4px 10px rgba(52, 199, 89, 0.15);">Add Contribution</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/mockData.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
