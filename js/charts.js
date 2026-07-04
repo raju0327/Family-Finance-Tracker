@@ -11,74 +11,69 @@ window.Charts = {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const total = segments.reduce((acc, s) => acc + s.value, 0);
+    // Filter and sort active segments (largest first)
+    const activeSegments = segments.filter(s => s.value > 0).sort((a, b) => b.value - a.value);
+    const total = activeSegments.reduce((acc, s) => acc + s.value, 0);
+
     if (total === 0) {
       container.innerHTML = `<div class="no-data">No Expense Data Available</div>`;
+      const legend = document.getElementById('donut-legend');
+      if (legend) legend.innerHTML = '';
       return;
     }
 
-    // Sort segments so largest is the outermost ring
-    const activeSegments = segments.filter(s => s.value > 0).sort((a, b) => b.value - a.value);
-
-    const cx = 50;
-    const cy = 50;
-    const strokeWidth = 5.2;
-
-    let svgContent = `
-      <svg viewBox="0 0 100 100" class="donut-svg">
-        <defs>
-          <linearGradient id="glow-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="var(--apple-blue)" stop-opacity="0.15"></stop>
-            <stop offset="100%" stop-color="var(--apple-purple)" stop-opacity="0.05"></stop>
-          </linearGradient>
-        </defs>
+    // 1. Generate the Sleek Horizontal Spectrum Strip
+    let spectrumHtml = `
+      <div class="spectrum-bar-container">
+        <div class="spectrum-bar" style="display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--apple-border); width: 100%;">
     `;
 
-    activeSegments.forEach((seg, idx) => {
-      // Outermost ring has radius 40, next has 32.5, 25, 17.5
-      const radius = 40 - (idx * 7.5);
-      if (radius < 10) return; // avoid too tiny rings
-      
-      const circumference = 2 * Math.PI * radius;
-      const percentage = seg.value / total;
-      const strokeLength = percentage * circumference;
-      const strokeOffset = circumference - strokeLength;
-
-      svgContent += `
-        <!-- Background Track Ring -->
-        <circle cx="${cx}" cy="${cy}" r="${radius}" 
-                stroke="var(--apple-border)" 
-                stroke-width="${strokeWidth}" 
-                stroke-opacity="0.25"
-                fill="transparent" />
-        <!-- Active Progress Ring -->
-        <circle cx="${cx}" cy="${cy}" r="${radius}" 
-                stroke="${seg.color}" 
-                stroke-width="${strokeWidth}" 
-                stroke-dasharray="${circumference}" 
-                stroke-dashoffset="${strokeOffset}" 
-                stroke-linecap="round"
-                fill="transparent" 
-                transform="rotate(-90 ${cx} ${cy})"
-                class="donut-segment"
-                style="--seg-color: ${seg.color}; transition: stroke-dashoffset 0.8s ease-in-out;"
-                data-label="${seg.label}"
-                data-value="${seg.value}"
-                data-percent="${(percentage * 100).toFixed(0)}%">
-          <title>${seg.label}: ${currencySymbol}${seg.value.toFixed(2)} (${(percentage * 100).toFixed(1)}%)</title>
-        </circle>
+    activeSegments.forEach(seg => {
+      const percentage = (seg.value / total) * 100;
+      spectrumHtml += `
+        <div class="spectrum-segment" 
+             style="width: ${percentage}%; background: ${seg.color}; height: 100%;" 
+             title="${seg.label}: ${currencySymbol}${seg.value.toFixed(2)} (${percentage.toFixed(0)}%)"></div>
       `;
     });
 
-    // Add center summary text
-    svgContent += `
-        <circle cx="${cx}" cy="${cy}" r="11" fill="var(--apple-bg)" stroke="var(--apple-border)" stroke-width="1" />
-        <text x="${cx}" y="${cy - 2.5}" text-anchor="middle" class="donut-center-title" style="font-size: 3.5px; font-weight: 700; fill: var(--apple-text-secondary); letter-spacing: 0.3px;">EXPENSES</text>
-        <text x="${cx}" y="${cy + 3.5}" text-anchor="middle" class="donut-center-value" style="font-size: 5px; font-weight: 800; fill: var(--apple-text);">${currencySymbol}${total.toLocaleString(undefined, {maximumFractionDigits: 0})}</text>
-      </svg>
+    spectrumHtml += `
+        </div>
+      </div>
     `;
 
-    container.innerHTML = svgContent;
+    container.innerHTML = spectrumHtml;
+
+    // 2. Generate the Detailed Progress Rows inside the legend container
+    const legendContainer = document.getElementById('donut-legend');
+    if (legendContainer) {
+      let listHtml = '<div class="spectrum-list" style="display: flex; flex-direction: column; gap: 14px; width: 100%; margin-top: 16px;">';
+
+      activeSegments.forEach(seg => {
+        const percentage = (seg.value / total) * 100;
+        
+        listHtml += `
+          <div class="spectrum-list-item" style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
+              <span style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--apple-text);">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: ${seg.color}; display: inline-block;"></span>
+                ${seg.label}
+              </span>
+              <span style="font-weight: 700; color: var(--apple-text-secondary);">
+                ${currencySymbol}${seg.value.toLocaleString(undefined, {maximumFractionDigits:0})} 
+                <span style="font-size: 0.65rem; font-weight: 500; margin-left: 2px;">(${percentage.toFixed(0)}%)</span>
+              </span>
+            </div>
+            <div class="progress-track" style="height: 4px; background: var(--apple-border); border-radius: 2px;">
+              <div class="progress-bar" style="width: ${percentage}%; background: ${seg.color}; height: 100%; border-radius: 2px;"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      listHtml += '</div>';
+      legendContainer.innerHTML = listHtml;
+    }
   },
 
   /**

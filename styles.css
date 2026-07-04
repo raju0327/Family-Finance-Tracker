@@ -1450,3 +1450,31 @@ body.theme-futuristic .glass-panel:hover {
 body.theme-futuristic .radial-progress-circle-bar {
   animation: pulseGlow 2.5s infinite ease-in-out;
 }
+
+/* Category Spectrum Chart Overrides */
+#donut-legend {
+  display: block !important;
+  border-top: none !important;
+  margin-top: 0px !important;
+  padding-top: 0px !important;
+  width: 100% !important;
+}
+
+.spectrum-bar-container {
+  padding: 4px 0;
+}
+
+.spectrum-segment {
+  opacity: 0.9;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.spectrum-segment:hover {
+  opacity: 1;
+  transform: scaleY(1.15);
+}
+
+.spectrum-list-item {
+  animation: slideUpIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
