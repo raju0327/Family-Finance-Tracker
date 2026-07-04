@@ -238,8 +238,6 @@ function init() {
 
   loadData();
   setupEventListeners();
-  updateClock();
-  setInterval(updateClock, 30000);
   
   // Set default form values
   document.getElementById('tx-date-input').value = new Date().toISOString().split('T')[0];
@@ -1392,20 +1390,6 @@ function showToast(message) {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 300);
   }, 3500);
-}
-
-function updateClock() {
-  const timeEl = document.getElementById('system-time');
-  if (!timeEl) return;
-  
-  const now = new Date();
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12;
-  
-  timeEl.innerText = `${hours}:${minutes} ${ampm}`;
 }
 
 function hexToRgb(hex) {
