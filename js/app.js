@@ -167,6 +167,10 @@ let currencyCode = 'INR';
 let googleSheetUrl = 'https://script.google.com/macros/s/AKfycbwBgR14Sfj5jvaMqCaJ3tVEdhDjYRn5LgGf8ihBkYeK6ePYUYn6ov_Ax0w6zl0mSPky1A/exec';
 let googleSheetSyncEnabled = true;
 
+// PIN Settings States
+let pinLockEnabled = false;
+let enteredPin = '';
+
 // DOM Elements
 const totalBalanceEl = document.getElementById('total-balance');
 const totalIncomeEl = document.getElementById('total-income');
@@ -293,7 +297,7 @@ function loadData() {
   if (localMembers) {
     members = JSON.parse(localMembers);
   } else {
-    members = [];
+    members = JSON.parse(JSON.stringify(window.INITIAL_MEMBERS));
   }
 
   // Load Categories
@@ -302,12 +306,18 @@ function loadData() {
   } else {
     categories = { ...window.CATEGORIES };
   }
+  // Merge loaded categories with default categories to get new ones
+  categories = { ...window.CATEGORIES, ...categories };
 
   // Load Setting variables
   activeTheme = localTheme || 'modern-light';
   currencyCode = localCurrencyCode || 'INR'; // Indian Rupee is default
   googleSheetUrl = (localSheetUrl && localSheetUrl.trim() !== '') ? localSheetUrl : 'https://script.google.com/macros/s/AKfycbwBgR14Sfj5jvaMqCaJ3tVEdhDjYRn5LgGf8ihBkYeK6ePYUYn6ov_Ax0w6zl0mSPky1A/exec';
   googleSheetSyncEnabled = localSheetSync !== null ? localSheetSync === 'true' : true;
+  
+  // Load PIN settings
+  const localPinLock = localStorage.getItem('orbit_pin_lock');
+  pinLockEnabled = localPinLock === 'true';
   
   saveToStorage();
 }
@@ -323,6 +333,7 @@ function saveToStorage() {
   localStorage.setItem('orbit_currency_code', currencyCode);
   localStorage.setItem('orbit_sheet_url', googleSheetUrl);
   localStorage.setItem('orbit_sheet_sync', googleSheetSyncEnabled.toString());
+  localStorage.setItem('orbit_pin_lock', pinLockEnabled.toString());
 }
 
 // Re-sync input states in Settings Drawer
@@ -331,6 +342,11 @@ function syncSettingsUI() {
   currencySelect.value = currencyCode;
   sheetSyncToggle.checked = googleSheetSyncEnabled;
   sheetUrlInput.value = googleSheetUrl;
+  
+  const pinLockToggle = document.getElementById('pin-lock-toggle');
+  if (pinLockToggle) {
+    pinLockToggle.checked = pinLockEnabled;
+  }
 }
 
 // Reset Database completely
@@ -360,6 +376,7 @@ function renderAll() {
   renderBudgets();
   renderGoals();
   renderSettingsProfiles();
+  renderAccountsSlider(); // Render accounts balances slider card
 }
 
 // Renders the member avatar slider at the top
@@ -678,7 +695,7 @@ function renderBudgets() {
     totalSpent += spent;
     totalLimit += limit;
     
-    const percent = Math.min((spent / limit) * 100, 100);
+    const percent = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
     
     let warningClass = '';
     if (percent >= 90) warningClass = 'danger';
@@ -692,17 +709,34 @@ function renderBudgets() {
             ${cat.name}
           </span>
           <span class="budget-amounts">
-            <strong>${currencySymbol}${spent.toLocaleString(undefined, {maximumFractionDigits:0})}</strong> of ${currencySymbol}${limit.toLocaleString()}
+            <strong>${currencySymbol}${spent.toLocaleString(undefined, {maximumFractionDigits:0})}</strong> of 
+            ${currencySymbol}<input type="number" class="budget-limit-input" data-cat-id="${catId}" value="${limit}" style="width: 55px; background: transparent; border: none; border-bottom: 1.5px dashed var(--apple-blue); color: var(--apple-text); font-weight: 700; text-align: right; font-size: 0.72rem; padding: 0 2px;">
           </span>
         </div>
         <div class="progress-track">
-          <div class="progress-bar ${warningClass}" style="width: ${percent}%; --cat-color: ${cat.color};"></div>
+          <div class="progress-bar ${warningClass}" style="width: ${percent}%; --cat-color: ${cat.color}; background: ${cat.color};"></div>
         </div>
       </div>
     `;
   });
   
   budgetsContainer.innerHTML = budgetsHtml;
+  
+  // Attach inline budget limit change listeners
+  document.querySelectorAll('.budget-limit-input').forEach(input => {
+    input.addEventListener('change', () => {
+      const catId = input.getAttribute('data-cat-id');
+      const val = parseFloat(input.value);
+      if (!isNaN(val) && val >= 0) {
+        budgets[catId] = val;
+        saveToStorage();
+        renderAll();
+        showToast(`Budget for ${categories[catId].name} updated to ${currencySymbol}${val}.`);
+      }
+    });
+    // Prevent event propagation
+    input.addEventListener('click', (e) => e.stopPropagation());
+  });
   
   const totalPercent = totalLimit > 0 ? Math.min((totalSpent / totalLimit) * 100, 100) : 0;
   totalBudgetRatioEl.innerText = `${totalPercent.toFixed(0)}% Limit Reached`;
@@ -719,18 +753,26 @@ function renderBudgets() {
 // Renders family savings goals
 function renderGoals() {
   goalsContainer.innerHTML = goals.map(g => {
-    const pct = ((g.current / g.target) * 100).toFixed(0);
+    const pct = g.target > 0 ? ((g.current / g.target) * 100).toFixed(0) : 0;
     const progressSVG = window.Charts.getRadialProgressSVG(g.current, g.target, g.color);
     
     return `
-      <div class="glass-panel goal-card" style="border-left: 3px solid ${g.color};">
-        <div class="goal-details">
-          <span class="goal-title">${g.name}</span>
+      <div class="glass-panel goal-card" style="border-left: 3px solid ${g.color}; position: relative;">
+        <div class="goal-details" style="flex: 1; padding-right: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="goal-title" style="font-weight: 700; color: var(--apple-text);">${g.name}</span>
+            <button class="btn-link btn-edit-goal" data-id="${g.id}" style="font-size: 0.68rem; color: var(--apple-blue); border: none; background: none; cursor: pointer; padding: 0;" title="Edit Goal">
+              <i class="fas fa-pencil-alt"></i>
+            </button>
+            <button class="btn-link btn-delete-goal" data-id="${g.id}" style="font-size: 0.68rem; color: var(--apple-red); border: none; background: none; cursor: pointer; padding: 0;" title="Delete Goal">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
           <div class="goal-numbers">
-            <span style="--goal-color: ${g.color}">${currencySymbol}${g.current.toLocaleString()}</span> of ${currencySymbol}${g.target.toLocaleString()} (${pct}%)
+            <span style="--goal-color: ${g.color}; font-weight: 700;">${currencySymbol}${g.current.toLocaleString()}</span> of ${currencySymbol}${g.target.toLocaleString()} (${pct}%)
           </div>
         </div>
-        <div class="goal-progress-box">
+        <div class="goal-progress-box" style="flex-shrink: 0; display: flex; align-items: center; gap: 10px;">
           ${progressSVG}
           <button class="btn-contribute" data-id="${g.id}" data-name="${g.name}" data-color="${g.color}" title="Add Contribution">
             <i class="fas fa-plus"></i>
@@ -755,7 +797,39 @@ function renderGoals() {
       submitBtn.style.background = color;
       submitBtn.style.boxShadow = `0 4px 10px rgba(${hexToRgb(color)}, 0.15)`;
 
-      goalOverlay.classList.add('active');
+      openOverlay(goalOverlay);
+    };
+  });
+
+  // Attach Goal Edit/Delete listeners
+  document.querySelectorAll('.btn-edit-goal').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      const g = goals.find(x => x.id === id);
+      if (g) {
+        document.getElementById('edit-goal-id').value = g.id;
+        document.getElementById('edit-goal-name-input').value = g.name;
+        document.getElementById('edit-goal-target-input').value = g.target;
+        document.getElementById('edit-goal-current-input').value = g.current;
+        document.getElementById('edit-goal-color-select').value = g.color;
+        
+        openOverlay(document.getElementById('edit-goal-overlay'));
+      }
+    };
+  });
+
+  document.querySelectorAll('.btn-delete-goal').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      const g = goals.find(x => x.id === id);
+      if (g && confirm(`Delete savings goal "${g.name}"?`)) {
+        goals = goals.filter(x => x.id !== id);
+        saveToStorage();
+        renderAll();
+        showToast(`Goal "${g.name}" deleted.`);
+      }
     };
   });
 }
@@ -766,24 +840,46 @@ function renderSettingsProfiles() {
   members.forEach(m => {
     const showDelete = members.length > 1;
     html += `
-      <div class="profile-edit-item" style="border-left: 2px solid ${m.color};">
-        <div class="profile-edit-info">
-          <span class="profile-edit-avatar">${m.avatar}</span>
-          <div class="profile-edit-text">
-            <span class="profile-edit-name">${m.name}</span>
-            <span class="profile-edit-role">${m.role}</span>
+      <div class="profile-edit-item" style="border-left: 2px solid ${m.color}; display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;">
+        <div class="profile-edit-info" style="display: flex; align-items: center; gap: 10px;">
+          <span class="profile-edit-avatar" style="font-size: 1.25rem;">${m.avatar}</span>
+          <div class="profile-edit-text" style="display: flex; flex-direction: column;">
+            <span class="profile-edit-name" style="font-weight: 700; font-size: 0.78rem;">${m.name}</span>
+            <span class="profile-edit-role" style="font-size: 0.65rem; color: var(--apple-gray);">${m.role}</span>
           </div>
         </div>
-        ${showDelete ? `
-          <button class="btn-delete-profile" data-id="${m.id}" title="Remove Member">
-            <i class="fas fa-trash-alt"></i>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button class="btn-link btn-edit-profile" data-id="${m.id}" style="color: var(--apple-blue); cursor: pointer; border: none; background: none; font-size: 0.75rem;" title="Edit Profile">
+            <i class="fas fa-pencil-alt"></i>
           </button>
-        ` : ''}
+          ${showDelete ? `
+            <button class="btn-delete-profile" data-id="${m.id}" style="color: var(--apple-red); cursor: pointer; border: none; background: none; font-size: 0.75rem;" title="Remove Member">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          ` : ''}
+        </div>
       </div>
     `;
   });
   
   profilesEditList.innerHTML = html;
+  
+  // Hook profiles edit
+  document.querySelectorAll('.btn-edit-profile').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.getAttribute('data-id');
+      const m = members.find(x => x.id === id);
+      if (m) {
+        document.getElementById('edit-profile-id').value = m.id;
+        document.getElementById('edit-profile-name-input').value = m.name;
+        document.getElementById('edit-profile-role-input').value = m.role;
+        document.getElementById('edit-profile-avatar-input').value = m.avatar;
+        document.getElementById('edit-profile-color-select').value = m.color;
+        
+        openOverlay(document.getElementById('edit-profile-overlay'));
+      }
+    };
+  });
   
   // Hook profiles deletion
   document.querySelectorAll('.btn-delete-profile').forEach(btn => {
@@ -854,23 +950,33 @@ function applyCurrency(code) {
 
 // Populates dropdown lists in modals
 function populateFormDropdowns() {
-  // 1. Categories Select
+  // 1. Categories Select (Filtered by type)
   const catSelect = document.getElementById('tx-category-select');
-  let catHtml = '';
-  Object.keys(categories).forEach(k => {
-    if (k !== 'salary') {
-      catHtml += `<option value="${k}">${categories[k].name}</option>`;
-    }
-  });
-  catSelect.innerHTML = catHtml;
+  if (catSelect) {
+    let catHtml = '';
+    Object.keys(categories).forEach(k => {
+      const cat = categories[k];
+      const isIncome = transactionType === 'income';
+      const catType = cat.type || (k === 'salary' ? 'income' : 'expense');
+      
+      if (isIncome && catType === 'income') {
+        catHtml += `<option value="${k}">${cat.name}</option>`;
+      } else if (!isIncome && catType === 'expense') {
+        catHtml += `<option value="${k}">${cat.name}</option>`;
+      }
+    });
+    catSelect.innerHTML = catHtml;
+  }
 
   // 2. Members Select
   const memberSelect = document.getElementById('tx-member-select');
-  let memHtml = '';
-  members.forEach(m => {
-    memHtml += `<option value="${m.id}">${m.name}</option>`;
-  });
-  memberSelect.innerHTML = memHtml;
+  if (memberSelect) {
+    let memHtml = '';
+    members.forEach(m => {
+      memHtml += `<option value="${m.id}">${m.name}</option>`;
+    });
+    memberSelect.innerHTML = memHtml;
+  }
 }
 
 // --- GOOGLE SHEETS NETWORK SYNC ---
@@ -1075,21 +1181,21 @@ function setupEventListeners() {
 
   // Modal controls: Add Transaction
   btnOpenAddTx.addEventListener('click', () => {
-    addTxOverlay.classList.add('active');
+    openOverlay(addTxOverlay);
   });
   btnCloseAddTx.addEventListener('click', () => {
-    addTxOverlay.classList.remove('active');
+    closeOverlay(addTxOverlay);
   });
   addTxOverlay.addEventListener('click', (e) => {
-    if (e.target === addTxOverlay) addTxOverlay.classList.remove('active');
+    if (e.target === addTxOverlay) closeOverlay(addTxOverlay);
   });
 
   // Modal controls: Goal Contribution
   btnCloseGoalModal.addEventListener('click', () => {
-    goalOverlay.classList.remove('active');
+    closeOverlay(goalOverlay);
   });
   goalOverlay.addEventListener('click', (e) => {
-    if (e.target === goalOverlay) goalOverlay.classList.remove('active');
+    if (e.target === goalOverlay) closeOverlay(goalOverlay);
   });
 
   // Transaction form type toggle
@@ -1123,7 +1229,8 @@ function setupEventListeners() {
     const memberId = document.getElementById('tx-member-select').value;
     const date = document.getElementById('tx-date-input').value;
     const description = document.getElementById('tx-desc-input').value.trim();
-    const categoryId = transactionType === 'income' ? 'salary' : document.getElementById('tx-category-select').value;
+    const categoryId = document.getElementById('tx-category-select').value;
+    const account = document.getElementById('tx-account-select').value;
 
     if (isNaN(amount) || amount <= 0 || !date || !description) {
       showToast("Fill in all transaction fields.");
@@ -1137,7 +1244,8 @@ function setupEventListeners() {
       categoryId,
       amount,
       date,
-      description
+      description,
+      account
     };
 
     transactions.push(newTx);
@@ -1148,7 +1256,7 @@ function setupEventListeners() {
 
     renderAll();
     
-    addTxOverlay.classList.remove('active');
+    closeOverlay(addTxOverlay);
     addTxForm.reset();
     document.getElementById('tx-date-input').value = new Date().toISOString().split('T')[0];
     
@@ -1198,10 +1306,10 @@ function setupEventListeners() {
   
   // Drawer open/close
   btnOpenSettings.addEventListener('click', () => {
-    settingsDrawer.classList.add('active');
+    openOverlay(settingsDrawer);
   });
   btnCloseSettings.addEventListener('click', () => {
-    settingsDrawer.classList.remove('active');
+    closeOverlay(settingsDrawer);
   });
 
   // Change Theme Trigger Dropdown
@@ -1351,16 +1459,124 @@ function setupEventListeners() {
     btnShowCode.innerText = isHidden ? 'Hide Deployment Code' : 'Show Deployment Code';
   });
 
+  // Toggle showing Sheets Setup Guide
+  const btnToggleGuide = document.getElementById('btn-toggle-guide');
+  const sheetsGuideBox = document.getElementById('sheets-guide-box');
+  if (btnToggleGuide && sheetsGuideBox) {
+    btnToggleGuide.addEventListener('click', () => {
+      const isHidden = sheetsGuideBox.style.display === 'none';
+      sheetsGuideBox.style.display = isHidden ? 'block' : 'none';
+      btnToggleGuide.innerText = isHidden ? 'Hide Setup Guide' : 'Show Google Sheets Setup Guide';
+    });
+  }
+
+  // PIN Lock switch listener
+  const pinLockToggle = document.getElementById('pin-lock-toggle');
+  if (pinLockToggle) {
+    pinLockToggle.addEventListener('change', () => {
+      pinLockEnabled = pinLockToggle.checked;
+      saveToStorage();
+      showToast(`PIN Lock ${pinLockEnabled ? 'Enabled (1234)' : 'Disabled'}.`);
+    });
+  }
+
+  // Backup CSV Trigger
+  const btnExportCSV = document.getElementById('btn-export-csv');
+  if (btnExportCSV) {
+    btnExportCSV.addEventListener('click', exportCSV);
+  }
+
+  // Restore CSV Trigger
+  const restoreFileInput = document.getElementById('restore-file-input');
+  if (restoreFileInput) {
+    restoreFileInput.addEventListener('change', restoreCSV);
+  }
+
   // Modal controls: Category Details
   const catOverlay = document.getElementById('category-details-overlay');
   const btnCloseCatModal = document.getElementById('btn-close-cat-modal');
   
   if (btnCloseCatModal && catOverlay) {
     btnCloseCatModal.addEventListener('click', () => {
-      catOverlay.classList.remove('active');
+      closeOverlay(catOverlay);
     });
     catOverlay.addEventListener('click', (e) => {
-      if (e.target === catOverlay) catOverlay.classList.remove('active');
+      if (e.target === catOverlay) closeOverlay(catOverlay);
+    });
+  }
+
+  // Modal controls: Edit Family Profile
+  const editProfileOverlay = document.getElementById('edit-profile-overlay');
+  const btnCloseEditProfileModal = document.getElementById('btn-close-edit-profile-modal');
+  const editProfileForm = document.getElementById('edit-profile-form');
+  
+  if (btnCloseEditProfileModal && editProfileOverlay) {
+    btnCloseEditProfileModal.addEventListener('click', () => {
+      closeOverlay(editProfileOverlay);
+    });
+    editProfileOverlay.addEventListener('click', (e) => {
+      if (e.target === editProfileOverlay) closeOverlay(editProfileOverlay);
+    });
+  }
+  
+  if (editProfileForm) {
+    editProfileForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-profile-id').value;
+      const m = members.find(x => x.id === id);
+      if (m) {
+        const oldName = m.name;
+        const newName = document.getElementById('edit-profile-name-input').value.trim();
+        m.name = newName;
+        m.role = document.getElementById('edit-profile-role-input').value.trim();
+        m.avatar = document.getElementById('edit-profile-avatar-input').value.trim();
+        m.color = document.getElementById('edit-profile-color-select').value;
+        m.glow = `rgba(${hexToRgb(m.color)}, 0.15)`;
+        
+        saveToStorage();
+        
+        if (oldName !== newName) {
+          syncProfileToGoogleSheet('rename', newName, oldName);
+        }
+        
+        populateFormDropdowns();
+        renderAll();
+        closeOverlay(editProfileOverlay);
+        showToast(`Member "${m.name}" updated.`);
+      }
+    });
+  }
+
+  // Modal controls: Edit Savings Goal
+  const editGoalOverlay = document.getElementById('edit-goal-overlay');
+  const btnCloseEditGoalModal = document.getElementById('btn-close-edit-goal-modal');
+  const editGoalForm = document.getElementById('edit-goal-form');
+  
+  if (btnCloseEditGoalModal && editGoalOverlay) {
+    btnCloseEditGoalModal.addEventListener('click', () => {
+      closeOverlay(editGoalOverlay);
+    });
+    editGoalOverlay.addEventListener('click', (e) => {
+      if (e.target === editGoalOverlay) closeOverlay(editGoalOverlay);
+    });
+  }
+  
+  if (editGoalForm) {
+    editGoalForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-goal-id').value;
+      const g = goals.find(x => x.id === id);
+      if (g) {
+        g.name = document.getElementById('edit-goal-name-input').value.trim();
+        g.target = parseInt(document.getElementById('edit-goal-target-input').value) || 1000;
+        g.current = parseInt(document.getElementById('edit-goal-current-input').value) || 0;
+        g.color = document.getElementById('edit-goal-color-select').value;
+        
+        saveToStorage();
+        renderAll();
+        closeOverlay(editGoalOverlay);
+        showToast(`Goal "${g.name}" updated.`);
+      }
     });
   }
 
@@ -1504,4 +1720,224 @@ function openCategoryDetails(catId) {
   overlay.classList.add('active');
 }
 
-window.addEventListener('DOMContentLoaded', init);
+// --- MOBILE OVERLAY HELPERS (History popstate triggers) ---
+function openOverlay(el) {
+  if (!el) return;
+  el.classList.add('active');
+  history.pushState({ modalOpen: true }, '');
+}
+
+function closeOverlay(el) {
+  if (!el) return;
+  el.classList.remove('active');
+  if (history.state && history.state.modalOpen) {
+    history.back();
+  }
+}
+
+// Global browser popstate listener for back button interception
+window.addEventListener('popstate', (e) => {
+  const activeOverlay = document.querySelector('.modal-overlay.active, .settings-drawer.active');
+  if (activeOverlay) {
+    activeOverlay.classList.remove('active');
+  }
+});
+
+// --- ACCOUNTS BALANCES SLIDER CARDS RENDERING ---
+function renderAccountsSlider() {
+  const carousel = document.getElementById('accounts-carousel-list');
+  if (!carousel) return;
+  
+  // Base starting balances for each account type
+  const accountsBalances = {
+    cash: 10000,
+    bank: 50000,
+    card: -5000,
+    upi: 5000,
+    savings: 120000
+  };
+  
+  transactions.forEach(t => {
+    const acc = t.account || 'cash';
+    if (accountsBalances[acc] !== undefined) {
+      if (t.type === 'income') {
+        accountsBalances[acc] += parseFloat(t.amount);
+      } else {
+        accountsBalances[acc] -= parseFloat(t.amount);
+      }
+    }
+  });
+  
+  const accountsMetadata = {
+    cash: { name: 'Cash', icon: '💵', color: '#34c759' },
+    bank: { name: 'Bank Account', icon: '🏦', color: '#007aff' },
+    card: { name: 'Credit Card', icon: '💳', color: '#ff3b30' },
+    upi: { name: 'UPI Wallet', icon: '📱', color: '#af52de' },
+    savings: { name: 'Savings Account', icon: '💰', color: '#ff9500' }
+  };
+  
+  carousel.innerHTML = Object.keys(accountsMetadata).map(key => {
+    const bal = accountsBalances[key];
+    const meta = accountsMetadata[key];
+    const sign = bal < 0 ? '-' : '';
+    const absBal = Math.abs(bal);
+    return `
+      <div class="account-slide-card" style="border-left: 3.5px solid ${meta.color};">
+        <span class="account-slide-icon">${meta.icon}</span>
+        <span class="account-slide-name">${meta.name}</span>
+        <span class="account-slide-balance">${sign}${currencySymbol}${absBal.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+// --- CSV BACKUP DATA EXPORTER & PARSER ---
+function exportCSV() {
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += "Transaction ID,Date,Type,Member ID,Category ID,Amount,Description,Account\n";
+  
+  transactions.forEach(t => {
+    const row = [
+      t.id,
+      t.date,
+      t.type,
+      t.memberId,
+      t.categoryId,
+      t.amount,
+      `"${t.description.replace(/"/g, '""')}"`,
+      t.account || 'cash'
+    ].join(",");
+    csvContent += row + "\n";
+  });
+  
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `family_ledger_backup_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast("CSV Exported successfully!");
+}
+
+function restoreCSV(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const text = evt.target.result;
+    const lines = text.split('\n');
+    const newTxs = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const cols = [];
+      let insideQuote = false;
+      let current = '';
+      for (let c = 0; c < line.length; c++) {
+        const char = line[c];
+        if (char === '"') {
+          insideQuote = !insideQuote;
+        } else if (char === ',' && !insideQuote) {
+          cols.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      cols.push(current);
+      
+      if (cols.length >= 7) {
+        newTxs.push({
+          id: cols[0],
+          date: cols[1],
+          type: cols[2],
+          memberId: cols[3],
+          categoryId: cols[4],
+          amount: parseFloat(cols[5]) || 0,
+          description: cols[6],
+          account: cols[7] || 'cash'
+        });
+      }
+    }
+    
+    if (newTxs.length > 0) {
+      transactions = newTxs;
+      saveToStorage();
+      renderAll();
+      showToast(`Restored ${newTxs.length} transactions from CSV!`);
+    } else {
+      showToast("Invalid CSV Backup File.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+// --- PIN LOCK keypads setup ---
+function setupPinLockpad() {
+  const overlay = document.getElementById('pin-lock-overlay');
+  const keys = overlay.querySelectorAll('.pin-key[data-val]');
+  const btnClear = document.getElementById('btn-pin-clear');
+  const btnDelete = document.getElementById('btn-pin-delete');
+  
+  enteredPin = '';
+  updatePinDots();
+  
+  keys.forEach(k => {
+    k.onclick = () => {
+      if (enteredPin.length < 4) {
+        enteredPin += k.getAttribute('data-val');
+        updatePinDots();
+        
+        if (enteredPin.length === 4) {
+          if (enteredPin === '1234') {
+            overlay.style.display = 'none';
+            showToast("App unlocked!");
+          } else {
+            enteredPin = '';
+            updatePinDots();
+            showToast("Incorrect PIN code! Try again.");
+          }
+        }
+      }
+    };
+  });
+  
+  btnClear.onclick = () => {
+    enteredPin = '';
+    updatePinDots();
+  };
+  
+  btnDelete.onclick = () => {
+    enteredPin = enteredPin.slice(0, -1);
+    updatePinDots();
+  };
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    if (dot) {
+      if (i < enteredPin.length) {
+        dot.classList.add('filled');
+      } else {
+        dot.classList.remove('filled');
+      }
+    }
+  }
+}
+
+// Intercept boot check
+window.addEventListener('DOMContentLoaded', () => {
+  init();
+  
+  // Trigger lock screen intercept if PIN lock setting is active
+  const pinOverlay = document.getElementById('pin-lock-overlay');
+  if (pinLockEnabled && pinOverlay) {
+    pinOverlay.style.display = 'flex';
+    setupPinLockpad();
+  }
+});

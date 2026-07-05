@@ -1478,3 +1478,91 @@ body.theme-futuristic .radial-progress-circle-bar {
 .spectrum-list-item {
   animation: slideUpIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Animated Slide Transitions for View Panels */
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.view-panel.active {
+  display: block !important;
+  animation: slideFadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Accounts Carousel Slider */
+.accounts-carousel::-webkit-scrollbar {
+  height: 4px;
+}
+.accounts-carousel::-webkit-scrollbar-thumb {
+  background: var(--apple-border);
+  border-radius: 2px;
+}
+.account-slide-card {
+  flex: 0 0 145px;
+  scroll-snap-align: start;
+  padding: 12px;
+  border-radius: var(--border-radius-md);
+  background: var(--apple-panel-bg);
+  border: 1px solid var(--apple-border);
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+}
+.account-slide-card:hover {
+  border-color: var(--apple-border-hover);
+  transform: translateY(-1px);
+}
+.account-slide-icon {
+  font-size: 1.1rem;
+  margin-bottom: 2px;
+}
+.account-slide-name {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--apple-text-secondary);
+}
+.account-slide-balance {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--apple-text);
+}
+
+/* PIN Lock Screen Styling */
+.pin-lock-overlay {
+  display: none;
+}
+.pin-lock-overlay.active {
+  display: flex !important;
+  animation: fadeIn 0.3s ease forwards;
+}
+.pin-dot.filled {
+  background: var(--apple-blue) !important;
+  border-color: var(--apple-blue) !important;
+  box-shadow: 0 0 8px var(--apple-blue);
+}
+.pin-key {
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.pin-key:active {
+  background: var(--apple-border) !important;
+  transform: scale(0.92);
+}
+
+/* Inline Budget Limit Styles */
+.budget-limit-input:focus {
+  outline: none;
+  border-bottom: 1.5px dashed var(--apple-blue) !important;
+  background: rgba(0, 122, 255, 0.04) !important;
+}

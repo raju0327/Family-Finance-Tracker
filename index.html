@@ -75,6 +75,17 @@
             </div>
           </div>
 
+          <!-- Accounts Balance Slider -->
+          <div class="accounts-slider-container" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 4px;">
+              <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); letter-spacing: 0.5px;">My Accounts & Wallets</span>
+              <span style="font-size: 0.6rem; color: var(--apple-blue); font-weight: 500;">Swipe left <i class="fas fa-arrow-right"></i></span>
+            </div>
+            <div class="accounts-carousel" id="accounts-carousel-list" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
+              <!-- Dynamic Account Cards will be loaded here -->
+            </div>
+          </div>
+
           <!-- Category Spending Donut Chart -->
           <div class="glass-panel">
             <div class="chart-header">
@@ -298,13 +309,20 @@
           </form>
         </div>
 
-        <!-- Section 5: Google Sheets Integration -->
+        <!-- Section 5: Google Sheets Integration & Security -->
         <div class="settings-section">
-          <h4>Google Sheets Sync</h4>
+          <h4>Sync & Security</h4>
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
             <span class="balance-label" style="font-size: 0.75rem;">Enable Sheets Sync</span>
             <label class="switch">
               <input type="checkbox" id="sheet-sync-toggle">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <span class="balance-label" style="font-size: 0.75rem;">Enable PIN Lock (1234)</span>
+            <label class="switch">
+              <input type="checkbox" id="pin-lock-toggle">
               <span class="slider round"></span>
             </label>
           </div>
@@ -316,7 +334,9 @@
             Test Sync Status
           </button>
 
-          <div style="margin-top: 15px; background: rgba(0,0,0,0.02); padding: 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--apple-border);">
+          <button class="btn-link" id="btn-toggle-guide" style="font-size: 0.65rem; margin-top: 8px; color: var(--apple-blue); display: block; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">Show Setup Guide</button>
+
+          <div id="sheets-guide-box" style="display: none; margin-top: 15px; background: rgba(0,0,0,0.02); padding: 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--apple-border);">
             <span style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--apple-blue); display: block; margin-bottom: 6px;">Setup Guide:</span>
             <ol style="font-size: 0.65rem; color: var(--apple-gray); padding-left: 14px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
               <li>Create a Google Sheet.</li>
@@ -340,6 +360,20 @@
           <span style="font-size: 0.6rem; color: var(--apple-gray); display: block; margin-top: 6px; text-align: center;">
             Force download the latest app version from GitHub.
           </span>
+        </div>
+
+        <!-- Section 7: Backup & Security -->
+        <div class="settings-section">
+          <h4>Backup & Restore</h4>
+          <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <button id="btn-export-csv" class="glass-submit-btn" style="flex: 1; font-size: 0.65rem; margin-top: 0; background: var(--apple-green); color: #fff; padding: 10px 4px;">
+              <i class="fas fa-file-csv" style="margin-right: 4px;"></i> Export CSV
+            </button>
+            <label for="restore-file-input" class="glass-submit-btn" style="flex: 1; font-size: 0.65rem; margin-top: 0; background: var(--apple-purple); color: #fff; text-align: center; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 10px 4px; box-sizing: border-box; line-height: 1.2;">
+              <i class="fas fa-file-upload" style="margin-right: 4px;"></i> Restore CSV
+            </label>
+            <input type="file" id="restore-file-input" accept=".csv" style="display: none;">
+          </div>
         </div>
       </div>
     </div>
@@ -376,6 +410,18 @@
           <label for="tx-category-select">Category</label>
           <select id="tx-category-select" class="glass-select" required>
             <!-- Loaded Dynamically -->
+          </select>
+        </div>
+
+        <!-- Account Selector -->
+        <div class="form-group">
+          <label for="tx-account-select">Account / Wallet</label>
+          <select id="tx-account-select" class="glass-select" required>
+            <option value="cash">💵 Cash</option>
+            <option value="bank">🏦 Bank Account</option>
+            <option value="card">💳 Credit Card</option>
+            <option value="upi">📱 UPI Wallet (GPay/PhonePe)</option>
+            <option value="savings">💰 Savings Account</option>
           </select>
         </div>
 
@@ -450,6 +496,116 @@
       <div class="transaction-list" id="cat-modal-tx-list" style="overflow-y: auto; flex: 1; min-height: 150px;">
         <!-- Dynamic category transaction items -->
       </div>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Edit Family Member -->
+  <div class="modal-overlay" id="edit-profile-overlay">
+    <div class="glass-modal" style="max-height: 75%;">
+      <div class="modal-header">
+        <h3>Edit Family Member</h3>
+        <button class="btn-close-modal" id="btn-close-edit-profile-modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="edit-profile-form" onsubmit="return false;">
+        <input type="hidden" id="edit-profile-id">
+        <div class="form-group">
+          <label for="edit-profile-name-input">Full Name</label>
+          <input type="text" id="edit-profile-name-input" class="glass-input" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-profile-role-input">Role (e.g. Father, Daughter)</label>
+          <input type="text" id="edit-profile-role-input" class="glass-input" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-profile-avatar-input">Avatar (Emoji)</label>
+          <input type="text" id="edit-profile-avatar-input" class="glass-input" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-profile-color-select">Color Accent</label>
+          <select id="edit-profile-color-select" class="glass-select">
+            <option value="#007aff">Indigo Blue</option>
+            <option value="#34c759">Mint Green</option>
+            <option value="#ff9500">Amber Orange</option>
+            <option value="#ff3b30">Coral Red</option>
+            <option value="#af52de">Lilac Purple</option>
+            <option value="#5856d6">Iris Blue</option>
+            <option value="#ff2d55">Rose Pink</option>
+          </select>
+        </div>
+        <button type="submit" class="glass-submit-btn">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Edit Savings Goal -->
+  <div class="modal-overlay" id="edit-goal-overlay">
+    <div class="glass-modal" style="max-height: 75%;">
+      <div class="modal-header">
+        <h3>Edit Savings Goal</h3>
+        <button class="btn-close-modal" id="btn-close-edit-goal-modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="edit-goal-form" onsubmit="return false;">
+        <input type="hidden" id="edit-goal-id">
+        <div class="form-group">
+          <label for="edit-goal-name-input">Goal Name</label>
+          <input type="text" id="edit-goal-name-input" class="glass-input" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-goal-target-input">Target Amount</label>
+          <input type="number" id="edit-goal-target-input" class="glass-input" required min="1">
+        </div>
+        <div class="form-group">
+          <label for="edit-goal-current-input">Current Saved Amount</label>
+          <input type="number" id="edit-goal-current-input" class="glass-input" required min="0">
+        </div>
+        <div class="form-group">
+          <label for="edit-goal-color-select">Color Tag</label>
+          <select id="edit-goal-color-select" class="glass-select">
+            <option value="#007aff">Indigo Blue</option>
+            <option value="#34c759">Mint Green</option>
+            <option value="#ff9500">Amber Orange</option>
+            <option value="#ff3b30">Coral Red</option>
+            <option value="#af52de">Lilac Purple</option>
+            <option value="#ff2d55">Rose Pink</option>
+          </select>
+        </div>
+        <button type="submit" class="glass-submit-btn">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- PIN Lock Screen Overlay -->
+  <div class="pin-lock-overlay" id="pin-lock-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--apple-bg); z-index: 10000; align-items: center; justify-content: center; flex-direction: column; box-sizing: border-box; padding: 20px;">
+    <div class="pin-logo" style="font-size: 2.5rem; color: var(--apple-blue); margin-bottom: 20px;">
+      <i class="fas fa-lock"></i>
+    </div>
+    <div style="font-size: 1rem; font-weight: 700; color: var(--apple-text); margin-bottom: 8px;">Enter PIN Code</div>
+    <div style="font-size: 0.7rem; color: var(--apple-gray); margin-bottom: 24px;">Default PIN is 1234</div>
+    <div class="pin-dots" style="display: flex; gap: 16px; margin-bottom: 40px;">
+      <div class="pin-dot" id="dot-0" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;"></div>
+      <div class="pin-dot" id="dot-1" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;"></div>
+      <div class="pin-dot" id="dot-2" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;"></div>
+      <div class="pin-dot" id="dot-3" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;"></div>
+    </div>
+    <div class="pin-keypad" style="display: grid; grid-template-columns: repeat(3, 70px); gap: 18px 24px; justify-content: center;">
+      <button class="pin-key" data-val="1" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">1</button>
+      <button class="pin-key" data-val="2" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">2</button>
+      <button class="pin-key" data-val="3" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">3</button>
+      <button class="pin-key" data-val="4" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">4</button>
+      <button class="pin-key" data-val="5" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">5</button>
+      <button class="pin-key" data-val="6" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">6</button>
+      <button class="pin-key" data-val="7" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">7</button>
+      <button class="pin-key" data-val="8" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">8</button>
+      <button class="pin-key" data-val="9" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">9</button>
+      <button class="pin-key" id="btn-pin-clear" style="width: 70px; height: 70px; border-radius: 50%; border: none; background: transparent; color: var(--apple-text); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">Clear</button>
+      <button class="pin-key" data-val="0" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">0</button>
+      <button class="pin-key" id="btn-pin-delete" style="width: 70px; height: 70px; border-radius: 50%; border: none; background: transparent; color: var(--apple-text); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;"><i class="fas fa-backspace"></i></button>
     </div>
   </div>
 
