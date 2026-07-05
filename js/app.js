@@ -536,12 +536,13 @@ function updateMetricsAndCharts() {
       id: k,
       value: categorySums[k],
       color: categories[k].color,
-      label: categories[k].name
+      label: categories[k].name,
+      limit: budgets[k] || 0
     };
   });
   
   window.Charts.renderDonutChart('donut-chart-container', donutSegments, currencySymbol);
-  renderDonutLegend(donutSegments);
+  // renderDonutLegend(donutSegments);
 
   // 2. Trend Timeline calculations
   const expenseTxs = filtered.filter(t => t.type === 'expense');

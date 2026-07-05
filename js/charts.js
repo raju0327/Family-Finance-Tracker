@@ -50,21 +50,31 @@ window.Charts = {
 
       // Render active categories first
       activeSegments.forEach(seg => {
-        const percentage = total > 0 ? (seg.value / total) * 100 : 0;
+        const sharePercentage = total > 0 ? (seg.value / total) * 100 : 0;
+        const budgetPercentage = seg.limit > 0 ? Math.min((seg.value / seg.limit) * 100, 100) : 0;
+        
+        let warningColor = seg.color;
+        if (budgetPercentage >= 90) warningColor = 'var(--apple-red)';
+        else if (budgetPercentage >= 75) warningColor = 'var(--apple-orange)';
+
+        const limitText = seg.limit > 0 ? `of ${currencySymbol}${seg.limit.toLocaleString()} budget` : 'no budget limit';
+        const usedText = seg.limit > 0 ? `(${budgetPercentage.toFixed(0)}% used)` : '';
+        
         listHtml += `
-          <div class="spectrum-list-item" data-cat-id="${seg.id}" style="display: flex; flex-direction: column; gap: 6px; cursor: pointer;">
+          <div class="spectrum-list-item" data-cat-id="${seg.id}" style="display: flex; flex-direction: column; gap: 6px; cursor: pointer;" onclick="openCategoryDetails('${seg.id}')">
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
               <span style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--apple-text);">
                 <span style="width: 8px; height: 8px; border-radius: 50%; background: ${seg.color}; display: inline-block;"></span>
                 ${seg.label}
+                <span style="font-size: 0.62rem; font-weight: 500; color: var(--apple-text-secondary); margin-left: 2px;">(${sharePercentage.toFixed(0)}% share)</span>
               </span>
               <span style="font-weight: 700; color: var(--apple-text-secondary);">
                 ${currencySymbol}${seg.value.toLocaleString(undefined, {maximumFractionDigits:0})} 
-                <span style="font-size: 0.65rem; font-weight: 500; margin-left: 2px;">(${percentage.toFixed(0)}%)</span>
+                <span style="font-size: 0.65rem; font-weight: 500; color: var(--apple-gray); margin-left: 2px;">${limitText} ${usedText}</span>
               </span>
             </div>
             <div class="progress-track" style="height: 4px; background: var(--apple-border); border-radius: 2px;">
-              <div class="progress-bar" style="width: ${percentage}%; background: ${seg.color}; height: 100%; border-radius: 2px;"></div>
+              <div class="progress-bar" style="width: ${budgetPercentage}%; background: ${warningColor}; height: 100%; border-radius: 2px;"></div>
             </div>
           </div>
         `;
@@ -72,16 +82,19 @@ window.Charts = {
 
       // Render zero-spent categories at the bottom
       zeroSegments.forEach(seg => {
+        const limitText = seg.limit > 0 ? `of ${currencySymbol}${seg.limit.toLocaleString()} budget` : 'no budget limit';
+        
         listHtml += `
-          <div class="spectrum-list-item" data-cat-id="${seg.id}" style="display: flex; flex-direction: column; gap: 6px; cursor: pointer; opacity: 0.6;">
+          <div class="spectrum-list-item" data-cat-id="${seg.id}" style="display: flex; flex-direction: column; gap: 6px; cursor: pointer; opacity: 0.6;" onclick="openCategoryDetails('${seg.id}')">
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
               <span style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--apple-text);">
                 <span style="width: 8px; height: 8px; border-radius: 50%; background: ${seg.color || '#ccc'}; display: inline-block;"></span>
                 ${seg.label}
+                <span style="font-size: 0.62rem; font-weight: 500; color: var(--apple-text-secondary); margin-left: 2px;">(0% share)</span>
               </span>
               <span style="font-weight: 600; color: var(--apple-text-secondary);">
                 ${currencySymbol}0 
-                <span style="font-size: 0.65rem; font-weight: 500; margin-left: 2px;">(0%)</span>
+                <span style="font-size: 0.65rem; font-weight: 500; color: var(--apple-gray); margin-left: 2px;">${limitText} (0% used)</span>
               </span>
             </div>
             <div class="progress-track" style="height: 4px; background: var(--apple-border); border-radius: 2px;">
