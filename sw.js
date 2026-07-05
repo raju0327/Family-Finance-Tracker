@@ -1,4 +1,4 @@
-const CACHE_NAME = 'family-finance-v2';
+const CACHE_NAME = 'family-finance-v5';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
