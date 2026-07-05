@@ -698,6 +698,15 @@ function renderFullTransactions() {
   attachDeleteHandlers();
 }
 
+function getCategoryIconHTML(cat) {
+  if (!cat) return '📁';
+  const icon = cat.icon || '📁';
+  if (icon.startsWith('fa-')) {
+    return `<i class="fas ${icon}"></i>`;
+  }
+  return icon;
+}
+
 // Templates single transaction list item
 function getTransactionRowHTML(t) {
   const cat = categories[t.categoryId] || { name: 'Expense', icon: 'fa-shopping-basket', color: '#007aff' };
@@ -713,8 +722,8 @@ function getTransactionRowHTML(t) {
         <div class="tx-flow-indicator ${isIncome ? 'income' : 'expense'}">
           <i class="fas ${isIncome ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
         </div>
-        <div class="tx-icon-box" style="color: ${cat.color};">
-          <i class="fas ${cat.icon}"></i>
+        <div class="tx-icon-box" style="color: ${cat.color}; font-size: 1.1rem; display: flex; align-items: center; justify-content: center;">
+          ${getCategoryIconHTML(cat)}
         </div>
         <div class="tx-details">
           <span class="tx-desc">${t.description}</span>
@@ -808,7 +817,7 @@ function renderBudgets() {
       <div class="glass-panel budget-item">
         <div class="budget-meta">
           <span class="budget-cat-name" style="--cat-color: ${cat.color}">
-            <i class="fas ${cat.icon}"></i>
+            ${getCategoryIconHTML(cat)}
             ${cat.name}
           </span>
           <span class="budget-amounts">
@@ -1936,7 +1945,7 @@ function openCategoryDetails(catId) {
   // Setup header
   titleName.innerText = cat.name;
   iconBadge.style.background = cat.color;
-  iconBadge.innerHTML = `<i class="fas ${cat.icon}"></i>`;
+  iconBadge.innerHTML = getCategoryIconHTML(cat);
   
   // Filter category transactions
   const filtered = getFilteredTransactions().filter(t => t.categoryId === catId && t.type === 'expense');

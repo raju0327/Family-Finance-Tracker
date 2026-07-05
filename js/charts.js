@@ -13,14 +13,8 @@ window.Charts = {
 
     // Filter and sort active segments (largest first)
     const activeSegments = segments.filter(s => s.value > 0).sort((a, b) => b.value - a.value);
+    const zeroSegments = segments.filter(s => !(s.value > 0));
     const total = activeSegments.reduce((acc, s) => acc + s.value, 0);
-
-    if (total === 0) {
-      container.innerHTML = `<div class="no-data">No Expense Data Available</div>`;
-      const legend = document.getElementById('donut-legend');
-      if (legend) legend.innerHTML = '';
-      return;
-    }
 
     // 1. Generate the Sleek Horizontal Spectrum Strip
     let spectrumHtml = `
@@ -28,15 +22,19 @@ window.Charts = {
         <div class="spectrum-bar" style="display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--apple-border); width: 100%;">
     `;
 
-    activeSegments.forEach(seg => {
-      const percentage = (seg.value / total) * 100;
-      spectrumHtml += `
-        <div class="spectrum-segment" 
-             data-cat-id="${seg.id}"
-             style="width: ${percentage}%; background: ${seg.color}; height: 100%;" 
-             title="${seg.label}: ${currencySymbol}${seg.value.toFixed(2)} (${percentage.toFixed(0)}%)"></div>
-      `;
-    });
+    if (total === 0) {
+      spectrumHtml += `<div style="width: 100%; background: var(--apple-border); height: 100%;"></div>`;
+    } else {
+      activeSegments.forEach(seg => {
+        const percentage = (seg.value / total) * 100;
+        spectrumHtml += `
+          <div class="spectrum-segment" 
+               data-cat-id="${seg.id}"
+               style="width: ${percentage}%; background: ${seg.color}; height: 100%;" 
+               title="${seg.label}: ${currencySymbol}${seg.value.toFixed(2)} (${percentage.toFixed(0)}%)"></div>
+        `;
+      });
+    }
 
     spectrumHtml += `
         </div>
@@ -45,14 +43,14 @@ window.Charts = {
 
     container.innerHTML = spectrumHtml;
 
-    // 2. Generate the Detailed Progress Rows inside the legend container
+    // 2. Generate the Detailed Progress Rows inside the legend container (including zero-spent categories)
     const legendContainer = document.getElementById('donut-legend');
     if (legendContainer) {
       let listHtml = '<div class="spectrum-list" style="display: flex; flex-direction: column; gap: 14px; width: 100%; margin-top: 16px;">';
 
+      // Render active categories first
       activeSegments.forEach(seg => {
-        const percentage = (seg.value / total) * 100;
-        
+        const percentage = total > 0 ? (seg.value / total) * 100 : 0;
         listHtml += `
           <div class="spectrum-list-item" data-cat-id="${seg.id}" style="display: flex; flex-direction: column; gap: 6px; cursor: pointer;">
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
@@ -67,6 +65,27 @@ window.Charts = {
             </div>
             <div class="progress-track" style="height: 4px; background: var(--apple-border); border-radius: 2px;">
               <div class="progress-bar" style="width: ${percentage}%; background: ${seg.color}; height: 100%; border-radius: 2px;"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      // Render zero-spent categories at the bottom
+      zeroSegments.forEach(seg => {
+        listHtml += `
+          <div class="spectrum-list-item" data-cat-id="${seg.id}" style="display: flex; flex-direction: column; gap: 6px; cursor: pointer; opacity: 0.6;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
+              <span style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--apple-text);">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: ${seg.color || '#ccc'}; display: inline-block;"></span>
+                ${seg.label}
+              </span>
+              <span style="font-weight: 600; color: var(--apple-text-secondary);">
+                ${currencySymbol}0 
+                <span style="font-size: 0.65rem; font-weight: 500; margin-left: 2px;">(0%)</span>
+              </span>
+            </div>
+            <div class="progress-track" style="height: 4px; background: var(--apple-border); border-radius: 2px;">
+              <div class="progress-bar" style="width: 0%; background: ${seg.color || '#ccc'}; height: 100%; border-radius: 2px;"></div>
             </div>
           </div>
         `;
