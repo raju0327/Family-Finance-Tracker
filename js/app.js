@@ -3095,6 +3095,12 @@ function setupPullToRefresh() {
   });
 }
 
+let dismissedReminders = JSON.parse(localStorage.getItem('dismissedReminders')) || [];
+
+function saveDismissedReminders() {
+  localStorage.setItem('dismissedReminders', JSON.stringify(dismissedReminders));
+}
+
 function renderReminders() {
   const container = document.getElementById('smart-reminders-box');
   if (!container) return;
@@ -3188,18 +3194,26 @@ function renderReminders() {
     });
   }
   
-  if (alerts.length === 0) {
+  // Filter out any dismissed alerts
+  const activeAlerts = alerts.filter(a => {
+    const alertId = a.title + '-' + a.subtitle;
+    return !dismissedReminders.includes(alertId);
+  });
+  
+  if (activeAlerts.length === 0) {
     container.style.display = 'none';
     container.innerHTML = '';
   } else {
     container.style.display = 'flex';
-    container.innerHTML = alerts.map((a, idx) => {
+    container.innerHTML = activeAlerts.map((a, idx) => {
       let borderClass = '';
       if (a.type === 'warning') borderClass = 'warning';
       else if (a.type === 'info') borderClass = 'info';
       
+      const alertId = a.title + '-' + a.subtitle;
+      
       return `
-        <div class="reminder-alert-card ${borderClass}" style="width: 100%;">
+        <div class="reminder-alert-card ${borderClass}" style="width: 100%; position: relative; transition: transform 0.2s ease, opacity 0.2s ease, height 0.2s ease, margin 0.2s ease; transform-origin: left;" data-alert-id="${alertId}">
           <div class="reminder-alert-card-left">
             <span class="reminder-alert-icon">${a.icon}</span>
             <div class="reminder-alert-text">
@@ -3212,8 +3226,71 @@ function renderReminders() {
       `;
     }).join('');
     
-    // Store actions in a global window array for trigger callback
-    window.reminderActions = alerts.map(a => a.action);
+    // Store active alerts actions
+    window.reminderActions = activeAlerts.map(a => a.action);
+    
+    // Attach touchswipe listeners to each card
+    const cards = container.querySelectorAll('.reminder-alert-card');
+    cards.forEach(card => {
+      let startX = 0;
+      let currentX = 0;
+      let isSwiping = false;
+      
+      card.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        currentX = startX;
+        isSwiping = true;
+        card.style.transition = 'none';
+      }, { passive: true });
+      
+      card.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
+        currentX = e.touches[0].clientX;
+        const diffX = currentX - startX;
+        
+        card.style.transform = `translateX(${diffX}px)`;
+        card.style.opacity = Math.max(1 - Math.abs(diffX) / 220, 0.1);
+      }, { passive: true });
+      
+      card.addEventListener('touchend', () => {
+        if (!isSwiping) return;
+        isSwiping = false;
+        
+        const diffX = currentX - startX;
+        const threshold = 120;
+        
+        card.style.transition = 'transform 0.25s ease, opacity 0.25s ease, height 0.25s ease, margin 0.25s ease, padding 0.25s ease';
+        
+        if (Math.abs(diffX) >= threshold) {
+          const direction = diffX > 0 ? 1 : -1;
+          card.style.transform = `translateX(${direction * window.innerWidth}px)`;
+          card.style.opacity = '0';
+          
+          const alertId = card.getAttribute('data-alert-id');
+          
+          setTimeout(() => {
+            card.style.height = '0';
+            card.style.paddingTop = '0';
+            card.style.paddingBottom = '0';
+            card.style.marginTop = '0';
+            card.style.marginBottom = '0';
+            card.style.border = 'none';
+            
+            setTimeout(() => {
+              if (alertId && !dismissedReminders.includes(alertId)) {
+                dismissedReminders.push(alertId);
+                saveDismissedReminders();
+              }
+              renderReminders();
+              showToast("Reminder dismissed.");
+            }, 220);
+          }, 220);
+        } else {
+          card.style.transform = 'translateX(0)';
+          card.style.opacity = '1';
+        }
+      });
+    });
   }
 }
 
