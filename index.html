@@ -331,29 +331,48 @@
 
         <!-- Section 4: Category Additions -->
         <div class="settings-section">
-          <h4>Expense Categories</h4>
+          <h4>Expense & Income Categories</h4>
           <button class="btn-link" id="btn-toggle-add-cat-form" style="margin-bottom: 10px; font-weight: 600;">
             + Create New Category
           </button>
           
           <form id="add-category-form" style="display: none; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--apple-border);">
             <div class="form-group">
-              <label>Category Key (lowercase)</label>
-              <input type="text" id="cat-id-input" class="glass-input" required placeholder="e.g. gifts" pattern="[a-z0-9]+">
-            </div>
-            <div class="form-group">
               <label>Category Name</label>
-              <input type="text" id="cat-name-input" class="glass-input" required placeholder="e.g. Gifts">
+              <input type="text" id="cat-name-input" class="glass-input" required placeholder="e.g. Gifts & Donations">
             </div>
             <div class="form-group">
-              <label>Icon Class (FontAwesome)</label>
-              <input type="text" id="cat-icon-input" class="glass-input" required placeholder="fa-gift">
+              <label>Category Type</label>
+              <select id="cat-type-select" class="glass-select">
+                <option value="expense">Expense Category</option>
+                <option value="income">Income Category</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Select Icon Symbol</label>
+              <select id="cat-icon-select" class="glass-select">
+                <option value="fa-shopping-basket">🍕 Food & Groceries</option>
+                <option value="fa-car">🚗 Transport & Fuel</option>
+                <option value="fa-home">🏠 Rent & Dwellings</option>
+                <option value="fa-shopping-bag">🛍️ Shopping & Mall</option>
+                <option value="fa-bolt">🔌 Bills & Utilities</option>
+                <option value="fa-credit-card">💳 EMI & Debt Loans</option>
+                <option value="fa-play-circle">🍿 Entertainment & Play</option>
+                <option value="fa-heartbeat">🏥 Health & Medical</option>
+                <option value="fa-graduation-cap">🎓 Study & Education</option>
+                <option value="fa-chart-line">📈 Investments & SIPs</option>
+                <option value="fa-wallet">💵 Salary & Earnings</option>
+                <option value="fa-briefcase">💼 Business & Trading</option>
+                <option value="fa-laptop-code">💻 Freelance & Work</option>
+                <option value="fa-gift">🎁 Gifts & Rewards</option>
+                <option value="fa-box">📦 General Others</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Category Color</label>
-              <input type="color" id="cat-color-input" class="glass-input" value="#007aff" style="padding: 4px; height: 40px; border: none; background: transparent; cursor: pointer;">
+              <input type="color" id="cat-color-input" class="glass-input" value="#6366f1" style="padding: 4px; height: 40px; border: none; background: transparent; cursor: pointer;">
             </div>
-            <div class="form-group">
+            <div class="form-group" id="cat-budget-group">
               <label>Monthly Budget Limit</label>
               <input type="number" id="cat-budget-input" class="glass-input" value="10000" min="0">
             </div>
@@ -547,6 +566,34 @@
       </div>
       <div class="transaction-list" id="cat-modal-tx-list" style="overflow-y: auto; flex: 1; min-height: 150px;">
         <!-- Dynamic category transaction items -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Account Details -->
+  <div class="modal-overlay" id="account-details-overlay">
+    <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
+      <div class="modal-header" style="margin-bottom: 12px; flex-shrink: 0;">
+        <h3 id="acc-modal-title" style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+          <span id="acc-modal-icon-badge" style="width: 28px; height: 28px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 0.85rem; color: white; background: var(--apple-blue);">
+            🏦
+          </span>
+          <span id="acc-modal-name">Account Details</span>
+        </h3>
+        <button class="btn-close-modal" id="btn-close-acc-modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="acc-modal-summary" id="acc-modal-summary-box" style="margin-bottom: 16px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border); flex-shrink: 0; font-size: 0.75rem; display: flex; flex-direction: column; gap: 8px;">
+        <!-- Dynamic metrics -->
+      </div>
+      
+      <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); margin-bottom: 8px; flex-shrink: 0;">
+        Transactions History
+      </div>
+      <div class="transaction-list" id="acc-modal-tx-list" style="overflow-y: auto; flex: 1; min-height: 150px;">
+        <!-- Dynamic account transaction items -->
       </div>
     </div>
   </div>

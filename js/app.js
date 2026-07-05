@@ -269,6 +269,11 @@ function init() {
   // Initial Render
   renderAll();
 
+  // Hide members list on boot if not dashboard
+  if (membersContainer) {
+    membersContainer.style.display = (currentView === 'dashboard-view') ? 'flex' : 'none';
+  }
+
   // Pull records from Google Sheets on boot if sync is enabled
   if (googleSheetSyncEnabled && googleSheetUrl) {
     syncFromGoogleSheets();
@@ -1230,6 +1235,10 @@ function setupEventListeners() {
       
       currentView = target;
       
+      if (membersContainer) {
+        membersContainer.style.display = (target === 'dashboard-view') ? 'flex' : 'none';
+      }
+      
       if (target === 'dashboard-view') {
         updateMetricsAndCharts();
       }
@@ -1464,19 +1473,19 @@ function setupEventListeners() {
   addCatForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
-    const id = document.getElementById('cat-id-input').value.trim().toLowerCase();
     const name = document.getElementById('cat-name-input').value.trim();
-    const icon = document.getElementById('cat-icon-input').value.trim();
+    const type = document.getElementById('cat-type-select').value;
+    const icon = document.getElementById('cat-icon-select').value;
     const color = document.getElementById('cat-color-input').value;
     const initialBudget = parseFloat(document.getElementById('cat-budget-input').value);
     
-    if (categories[id]) {
-      alert("Error: Category key already exists.");
-      return;
-    }
+    // Auto-generate key from name
+    const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-4);
     
-    categories[id] = { name, icon, color };
-    budgets[id] = isNaN(initialBudget) ? 10000 : initialBudget;
+    categories[id] = { name, icon, color, type };
+    if (type === 'expense') {
+      budgets[id] = isNaN(initialBudget) ? 10000 : initialBudget;
+    }
     
     saveToStorage();
     populateFormDropdowns();
@@ -1559,6 +1568,18 @@ function setupEventListeners() {
     });
     catOverlay.addEventListener('click', (e) => {
       if (e.target === catOverlay) closeOverlay(catOverlay);
+    });
+  }
+
+  // Modal controls: Account Details
+  const accOverlay = document.getElementById('account-details-overlay');
+  const btnCloseAccModal = document.getElementById('btn-close-acc-modal');
+  if (btnCloseAccModal && accOverlay) {
+    btnCloseAccModal.addEventListener('click', () => {
+      closeOverlay(accOverlay);
+    });
+    accOverlay.addEventListener('click', (e) => {
+      if (e.target === accOverlay) closeOverlay(accOverlay);
     });
   }
 
@@ -1656,6 +1677,15 @@ function setupEventListeners() {
         openCategoryDetails(catId);
       }
     }
+  }
+
+  // Toggle Budget Limit input for Income Category Type
+  const catTypeSelect = document.getElementById('cat-type-select');
+  const catBudgetGroup = document.getElementById('cat-budget-group');
+  if (catTypeSelect && catBudgetGroup) {
+    catTypeSelect.addEventListener('change', () => {
+      catBudgetGroup.style.display = (catTypeSelect.value === 'income') ? 'none' : 'block';
+    });
   }
 }
 
@@ -1777,6 +1807,80 @@ function openCategoryDetails(catId) {
   overlay.classList.add('active');
 }
 
+function openAccountDetails(accId) {
+  const overlay = document.getElementById('account-details-overlay');
+  const titleName = document.getElementById('acc-modal-name');
+  const iconBadge = document.getElementById('acc-modal-icon-badge');
+  const summaryBox = document.getElementById('acc-modal-summary-box');
+  const txList = document.getElementById('acc-modal-tx-list');
+  
+  if (!overlay || !titleName || !iconBadge || !summaryBox || !txList) return;
+  
+  const accountsMetadata = {
+    cash: { name: 'Cash Wallet', icon: '💵', color: '#34c759' },
+    bank: { name: 'Bank Account', icon: '🏦', color: '#007aff' },
+    card: { name: 'Credit Card', icon: '💳', color: '#ff3b30' },
+    upi: { name: 'UPI Wallet', icon: '📱', color: '#af52de' },
+    savings: { name: 'Savings Account', icon: '💰', color: '#ff9500' }
+  };
+  
+  const meta = accountsMetadata[accId];
+  if (!meta) return;
+  
+  titleName.innerText = meta.name;
+  iconBadge.innerText = meta.icon;
+  iconBadge.style.background = meta.color;
+  
+  let baseBalance = 0;
+  if (accId === 'cash') baseBalance = 10000;
+  else if (accId === 'bank') baseBalance = 50000;
+  else if (accId === 'card') baseBalance = -5000;
+  else if (accId === 'upi') baseBalance = 5000;
+  else if (accId === 'savings') baseBalance = 120000;
+  
+  const filtered = transactions.filter(t => (t.account || 'cash') === accId);
+  
+  let incomeSum = 0;
+  let expenseSum = 0;
+  filtered.forEach(t => {
+    const amt = parseFloat(t.amount);
+    if (t.type === 'income') {
+      incomeSum += amt;
+    } else {
+      expenseSum += amt;
+    }
+  });
+  const netBalance = baseBalance + incomeSum - expenseSum;
+  
+  summaryBox.innerHTML = `
+    <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700;">
+      <span>Net Account Balance:</span>
+      <strong>${currencySymbol}${netBalance.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--apple-border); padding-top: 6px; margin-top: 4px;">
+      <span>Total Income:</span>
+      <span class="text-income">+${currencySymbol}${incomeSum.toLocaleString()}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--apple-border); padding-top: 6px;">
+      <span>Total Expenses:</span>
+      <span class="text-expense">-${currencySymbol}${expenseSum.toLocaleString()}</span>
+    </div>
+  `;
+  
+  if (filtered.length === 0) {
+    txList.innerHTML = `
+      <div class="empty-state" style="padding: 20px 0; text-align: center; color: var(--apple-gray); font-size: 0.65rem;">
+        No transaction history for this account
+      </div>
+    `;
+  } else {
+    txList.innerHTML = filtered.map(t => getTransactionRowHTML(t)).join('');
+    attachDeleteHandlers();
+  }
+  
+  overlay.classList.add('active');
+}
+
 // --- MOBILE OVERLAY HELPERS (History popstate triggers) ---
 function openOverlay(el) {
   if (!el) return;
@@ -1839,7 +1943,7 @@ function renderAccountsSlider() {
     const sign = bal < 0 ? '-' : '';
     const absBal = Math.abs(bal);
     return `
-      <div class="account-slide-card" style="border-left: 3.5px solid ${meta.color};">
+      <div class="account-slide-card" style="border-left: 3.5px solid ${meta.color}; cursor: pointer;" onclick="openAccountDetails('${key}')">
         <span class="account-slide-icon">${meta.icon}</span>
         <span class="account-slide-name">${meta.name}</span>
         <span class="account-slide-balance">${sign}${currencySymbol}${absBal.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>

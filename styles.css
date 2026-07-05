@@ -1678,3 +1678,15 @@ body.theme-futuristic .radial-progress-circle-bar {
   font-size: 0.65rem;
   color: var(--apple-text-secondary);
 }
+
+/* Responsive SVG Trend Line Chart */
+.line-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.chart-axis-text {
+  font-size: 0.65rem;
+  fill: var(--apple-text-secondary);
+  font-weight: 500;
+}
