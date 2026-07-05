@@ -1690,3 +1690,10 @@ body.theme-futuristic .radial-progress-circle-bar {
   fill: var(--apple-text-secondary);
   font-weight: 500;
 }
+
+/* Stack edit modals on top of list tool overlays */
+#edit-goal-overlay,
+#edit-profile-overlay,
+#goal-contribution-overlay {
+  z-index: 2000 !important;
+}

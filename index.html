@@ -217,6 +217,13 @@
                 <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Divide bills in family</span>
               </div>
               
+              <!-- Accounts & Wallets -->
+              <div class="tool-card-btn" id="btn-tool-accounts" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+                <span style="font-size: 1.5rem;">🏦</span>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Accounts & Wallets</span>
+                <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Balances breakdown</span>
+              </div>
+
               <!-- Challenges & Streak -->
               <div class="tool-card-btn" id="btn-tool-challenges" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; grid-column: span 2; transition: all 0.25s ease;">
                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
@@ -967,6 +974,21 @@
         </div>
         <button type="submit" class="glass-submit-btn">Execute Transfer</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Accounts & Wallets Hub view -->
+  <div class="modal-overlay" id="tool-accounts-overlay">
+    <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
+      <div class="modal-header" style="flex-shrink: 0;">
+        <h3>🏦 Accounts & Wallets</h3>
+        <button class="btn-close-modal" id="btn-close-tool-accounts">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 10px;" id="accounts-hub-view-list">
+        <!-- Loaded dynamically from app.js -->
+      </div>
     </div>
   </div>
 

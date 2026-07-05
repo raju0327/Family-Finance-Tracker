@@ -439,6 +439,7 @@ function renderAll() {
   if (typeof renderLoans === 'function') renderLoans();
   if (typeof renderInvestments === 'function') renderInvestments();
   if (typeof renderChallenges === 'function') renderChallenges();
+  if (typeof renderAccountsHub === 'function') renderAccountsHub();
 }
 
 // Renders the member avatar slider at the top
@@ -1832,11 +1833,6 @@ function openAccountDetails(accId) {
   iconBadge.style.background = meta.color;
   
   let baseBalance = 0;
-  if (accId === 'cash') baseBalance = 10000;
-  else if (accId === 'bank') baseBalance = 50000;
-  else if (accId === 'card') baseBalance = -5000;
-  else if (accId === 'upi') baseBalance = 5000;
-  else if (accId === 'savings') baseBalance = 120000;
   
   const filtered = transactions.filter(t => (t.account || 'cash') === accId);
   
@@ -1911,11 +1907,11 @@ function renderAccountsSlider() {
   
   // Base starting balances for each account type
   const accountsBalances = {
-    cash: 10000,
-    bank: 50000,
-    card: -5000,
-    upi: 5000,
-    savings: 120000
+    cash: 0,
+    bank: 0,
+    card: 0,
+    upi: 0,
+    savings: 0
   };
   
   transactions.forEach(t => {
@@ -2125,6 +2121,10 @@ function setupHubListeners() {
     openOverlay(document.getElementById('tool-challenges-overlay'));
     renderChallenges();
   };
+  document.getElementById('btn-tool-accounts').onclick = () => {
+    openOverlay(document.getElementById('tool-accounts-overlay'));
+    renderAccountsHub();
+  };
 
   // 2. Tool Close Buttons
   document.getElementById('btn-close-transfer-modal').onclick = () => {
@@ -2150,6 +2150,9 @@ function setupHubListeners() {
   };
   document.getElementById('btn-close-tool-challenges').onclick = () => {
     closeOverlay(document.getElementById('tool-challenges-overlay'));
+  };
+  document.getElementById('btn-close-tool-accounts').onclick = () => {
+    closeOverlay(document.getElementById('tool-accounts-overlay'));
   };
 
   // 3. Form accordions toggles
@@ -2780,6 +2783,62 @@ function populateSplitForm() {
       ${m.name}
     </label>
   `).join('');
+}
+
+function renderAccountsHub() {
+  const container = document.getElementById('accounts-hub-view-list');
+  if (!container) return;
+  
+  const accountsBalances = {
+    cash: 0,
+    bank: 0,
+    card: 0,
+    upi: 0,
+    savings: 0
+  };
+  
+  transactions.forEach(t => {
+    const acc = t.account || 'cash';
+    if (accountsBalances[acc] !== undefined) {
+      if (t.type === 'income') {
+        accountsBalances[acc] += parseFloat(t.amount);
+      } else {
+        accountsBalances[acc] -= parseFloat(t.amount);
+      }
+    }
+  });
+  
+  const accountsMetadata = {
+    cash: { name: 'Cash Wallet', icon: '💵', color: '#34c759', desc: 'Physical cash in hand' },
+    bank: { name: 'Bank Account', icon: '🏦', color: '#007aff', desc: 'Savings & salary bank ledger' },
+    card: { name: 'Credit Card', icon: '💳', color: '#ff3b30', desc: 'Credit limit balance dues' },
+    upi: { name: 'UPI Wallet', icon: '📱', color: '#af52de', desc: 'PhonePe, GPay & Paytm wallets' },
+    savings: { name: 'Savings Account', icon: '💰', color: '#ff9500', desc: 'Fixed deposits & emergency funds' }
+  };
+  
+  container.innerHTML = Object.keys(accountsMetadata).map(key => {
+    const bal = accountsBalances[key];
+    const meta = accountsMetadata[key];
+    const sign = bal < 0 ? '-' : '';
+    const absBal = Math.abs(bal);
+    
+    return `
+      <div class="sub-item-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--apple-card); border: 1px solid var(--apple-border); border-radius: var(--border-radius-md); cursor: pointer;" onclick="closeOverlay(document.getElementById('tool-accounts-overlay')); setTimeout(() => openAccountDetails('${key}'), 300);">
+        <div class="sub-item-info">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.25rem;">${meta.icon}</span>
+            <div style="display: flex; flex-direction: column;">
+              <span class="sub-item-name" style="font-weight: 700; font-size: 0.78rem;">${meta.name}</span>
+              <span class="sub-item-meta" style="font-size: 0.62rem; color: var(--apple-text-secondary);">${meta.desc}</span>
+            </div>
+          </div>
+        </div>
+        <strong style="font-size: 0.85rem; color: ${bal < 0 ? 'var(--apple-red)' : 'var(--apple-text)'};">
+          ${sign}${currencySymbol}${absBal.toLocaleString(undefined, {minimumFractionDigits: 2})}
+        </strong>
+      </div>
+    `;
+  }).join('');
 }
 
 // Intercept boot check
