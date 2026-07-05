@@ -3121,6 +3121,7 @@ function renderReminders() {
   const todayTxs = transactions.filter(t => t.date === todayStr);
   if (todayTxs.length === 0) {
     alerts.push({
+      id: `no-expenses-${todayStr}`,
       type: 'warning',
       icon: '📝',
       title: "No Expenses Logged Today",
@@ -3143,6 +3144,7 @@ function renderReminders() {
         if (diffDays <= 3) {
           const dueMsg = diffDays < 0 ? `Overdue by ${Math.abs(diffDays)} days` : (diffDays === 0 ? "Due today" : `Due in ${diffDays} days`);
           alerts.push({
+            id: `renewal-${s.name}-${s.nextDueDate}`,
             type: 'danger',
             icon: '🔔',
             title: `${s.name} Renewal`,
@@ -3168,6 +3170,7 @@ function renderReminders() {
         if (diffDays <= 5) {
           const dueMsg = diffDays < 0 ? `Overdue by ${Math.abs(diffDays)} days` : (diffDays === 0 ? "Due today" : `Due in ${diffDays} days`);
           alerts.push({
+            id: `emi-${l.name}-${l.nextEmiDate}`,
             type: 'danger',
             icon: '💵',
             title: `EMI: ${l.name}`,
@@ -3189,6 +3192,7 @@ function renderReminders() {
       const pct = (g.current / g.target) * 100;
       if (pct < 40) {
         alerts.push({
+          id: `goal-boost-${g.name}-${todayStr}`,
           type: 'info',
           icon: '🎯',
           title: `Boost "${g.name}" Goal`,
@@ -3205,8 +3209,7 @@ function renderReminders() {
   
   // Filter out any dismissed alerts
   const activeAlerts = alerts.filter(a => {
-    const alertId = a.title + '-' + a.subtitle;
-    return !dismissedReminders.includes(alertId);
+    return !dismissedReminders.includes(a.id);
   });
   
   if (activeAlerts.length === 0) {
@@ -3219,7 +3222,7 @@ function renderReminders() {
       if (a.type === 'warning') borderClass = 'warning';
       else if (a.type === 'info') borderClass = 'info';
       
-      const alertId = a.title + '-' + a.subtitle;
+      const alertId = a.id;
       
       return `
         <div class="reminder-alert-card ${borderClass}" style="width: 100%; position: relative; transition: transform 0.2s ease, opacity 0.2s ease, height 0.2s ease, margin 0.2s ease; transform-origin: left;" data-alert-id="${alertId}">
