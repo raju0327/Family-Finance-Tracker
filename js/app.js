@@ -3221,7 +3221,12 @@ function renderReminders() {
               <span class="reminder-alert-subtitle">${a.subtitle}</span>
             </div>
           </div>
-          <button class="reminder-action-btn" onclick="triggerReminderAction(${idx})">${a.actionText}</button>
+          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <button class="reminder-action-btn" onclick="triggerReminderAction(${idx})">${a.actionText}</button>
+            <button class="reminder-close-btn" style="background: none; border: none; color: var(--apple-text-secondary); cursor: pointer; font-size: 0.85rem; padding: 4px 6px; display: flex; align-items: center; justify-content: center; opacity: 0.65; transition: opacity 0.2s;" onclick="dismissReminderDirectly('${alertId}')" title="Dismiss Reminder">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
         </div>
       `;
     }).join('');
@@ -3282,7 +3287,7 @@ function renderReminders() {
                 saveDismissedReminders();
               }
               renderReminders();
-              showToast("Reminder dismissed.");
+              showToast("Reminder deleted.");
             }, 220);
           }, 220);
         } else {
@@ -3298,6 +3303,36 @@ function renderReminders() {
 window.triggerReminderAction = function(idx) {
   if (window.reminderActions && window.reminderActions[idx]) {
     window.reminderActions[idx]();
+  }
+};
+
+window.dismissReminderDirectly = function(alertId) {
+  if (alertId && !dismissedReminders.includes(alertId)) {
+    dismissedReminders.push(alertId);
+    saveDismissedReminders();
+  }
+  
+  const card = document.querySelector(`.reminder-alert-card[data-alert-id="${alertId}"]`);
+  if (card) {
+    card.style.transition = 'transform 0.25s ease, opacity 0.25s ease, height 0.25s ease, margin 0.25s ease, padding 0.25s ease';
+    card.style.transform = 'scale(0.9)';
+    card.style.opacity = '0';
+    
+    setTimeout(() => {
+      card.style.height = '0';
+      card.style.paddingTop = '0';
+      card.style.paddingBottom = '0';
+      card.style.marginTop = '0';
+      card.style.marginBottom = '0';
+      card.style.border = 'none';
+      
+      setTimeout(() => {
+        renderReminders();
+        showToast("Reminder deleted.");
+      }, 220);
+    }, 220);
+  } else {
+    renderReminders();
   }
 };
 
