@@ -251,6 +251,13 @@ function init() {
   setupEventListeners();
   setupPullToRefresh();
   
+  // Request persistent storage quota to prevent cache eviction on mobile
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().then(granted => {
+      if (granted) console.log("PWA Cache Persistent storage granted!");
+    });
+  }
+  
   // Set default form values
   document.getElementById('tx-date-input').value = new Date().toISOString().split('T')[0];
   
