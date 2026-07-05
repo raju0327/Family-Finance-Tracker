@@ -50,6 +50,9 @@
           <span id="pull-refresh-text">Pull down to refresh</span>
         </div>
         
+        <!-- Smart Reminders Panel -->
+        <div id="smart-reminders-box" style="margin-bottom: 14px; display: none; flex-direction: column; gap: 8px;"></div>
+        
         <!-- ================= DASHBOARD VIEW ================= -->
         <div id="dashboard-view" class="view-panel active">
           <!-- Total Balance Card -->
@@ -127,10 +130,62 @@
 
         <!-- ================= TRANSACTIONS LEDGER VIEW ================= -->
         <div id="ledger-view" class="view-panel">
-          <!-- Search Control -->
-          <div class="glass-panel" style="padding: 10px 12px; margin-bottom: 12px;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <input type="text" id="search-tx" class="glass-input" placeholder="Search transactions..." style="padding: 8px 12px; font-size: 0.75rem;">
+          <!-- Search & Filter Controls -->
+          <div class="glass-panel" style="padding: 12px; margin-bottom: 12px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                <input type="text" id="search-tx" class="glass-input" placeholder="Search description..." style="padding: 8px 12px; font-size: 0.75rem; width: 100%;">
+              </div>
+              <button id="btn-toggle-filters" class="glass-submit-btn" style="margin-top: 0; padding: 8px 12px; font-size: 0.75rem; background: var(--apple-card); border: 1px solid var(--apple-border); color: var(--apple-text); flex-shrink: 0;">
+                <i class="fas fa-filter"></i> Filters
+              </button>
+            </div>
+            
+            <!-- Expandable filter options -->
+            <div id="ledger-filters-panel" style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--apple-border);">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.58rem;">Category</label>
+                  <select id="filter-category-select" class="glass-select" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                    <option value="all">All Categories</option>
+                    <!-- Categories populated dynamically -->
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.58rem;">Account / Wallet</label>
+                  <select id="filter-account-select" class="glass-select" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                    <option value="all">All Accounts</option>
+                    <option value="cash">💵 Cash</option>
+                    <option value="bank">🏦 Bank Account</option>
+                    <option value="card">💳 Credit Card</option>
+                    <option value="upi">📱 UPI Wallet</option>
+                    <option value="savings">💰 Savings Account</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.58rem;">Specific Date</label>
+                  <input type="date" id="filter-date-input" class="glass-input" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.58rem;">Tags</label>
+                  <input type="text" id="filter-tags-input" class="glass-input" placeholder="e.g. food" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.58rem;">Min Amount</label>
+                  <input type="number" id="filter-min-amount" class="glass-input" placeholder="Min" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.58rem;">Max Amount</label>
+                  <input type="number" id="filter-max-amount" class="glass-input" placeholder="Max" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                </div>
+              </div>
+              <button id="btn-clear-filters" class="glass-submit-btn" style="margin-top: 4px; padding: 6px; font-size: 0.65rem; background: var(--apple-red); color: white; border: none; font-weight: 700;">
+                Reset All Filters
+              </button>
             </div>
           </div>
 
@@ -473,6 +528,31 @@
       </div>
       
       <form id="add-transaction-form" onsubmit="return false;">
+        <!-- Smart Features Triggers -->
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <button type="button" id="btn-voice-add" class="glass-submit-btn" style="flex: 1; margin-top: 0; padding: 8px 6px; font-size: 0.68rem; background: var(--apple-purple); color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            <i class="fas fa-microphone" id="voice-icon"></i> <span id="voice-btn-text">Voice Entry</span>
+          </button>
+          
+          <label for="receipt-file-input" class="glass-submit-btn" style="flex: 1; margin-top: 0; padding: 8px 6px; font-size: 0.68rem; background: var(--apple-blue); color: white; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; text-align: center; box-sizing: border-box; line-height: 1.2;">
+            <i class="fas fa-camera"></i> Scan Receipt
+          </label>
+          <input type="file" id="receipt-file-input" accept="image/*" style="display: none;">
+        </div>
+
+        <!-- Voice Soundwave Animation (hidden by default) -->
+        <div id="voice-waves-container" style="display: none; align-items: center; justify-content: center; gap: 3px; height: 18px; margin-bottom: 12px;">
+          <span class="voice-bar"></span>
+          <span class="voice-bar"></span>
+          <span class="voice-bar"></span>
+          <span class="voice-bar"></span>
+          <span class="voice-bar"></span>
+        </div>
+
+        <!-- OCR Scanning Loader Overlay (hidden by default) -->
+        <div id="ocr-loader-overlay" style="display: none; align-items: center; justify-content: center; gap: 8px; font-size: 0.7rem; color: var(--apple-blue); font-weight: 600; margin-bottom: 12px; background: rgba(0, 122, 255, 0.04); border: 1.5px dashed var(--apple-blue); padding: 8px; border-radius: var(--border-radius-md);">
+          <i class="fas fa-circle-notch fa-spin"></i> Extracting receipt details via OCR...
+        </div>
         <!-- Income/Expense Toggle -->
         <div class="form-group">
           <label>Transaction Type</label>
@@ -494,6 +574,10 @@
           <select id="tx-category-select" class="glass-select" required>
             <!-- Loaded Dynamically -->
           </select>
+          <!-- Auto Category Detection badge -->
+          <div id="auto-cat-badge" style="display: none; font-size: 0.58rem; color: var(--apple-green); font-weight: 700; margin-top: 3px; gap: 4px; align-items: center;">
+            <i class="fas fa-magic"></i> Auto-detected category!
+          </div>
         </div>
 
         <!-- Account Selector -->

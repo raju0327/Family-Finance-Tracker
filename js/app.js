@@ -448,6 +448,7 @@ function renderAll() {
   if (typeof renderInvestments === 'function') renderInvestments();
   if (typeof renderChallenges === 'function') renderChallenges();
   if (typeof renderAccountsHub === 'function') renderAccountsHub();
+  if (typeof renderReminders === 'function') renderReminders();
 }
 
 // Renders the member avatar slider at the top
@@ -634,15 +635,46 @@ function renderFullTransactions() {
   const filtered = getFilteredTransactions();
   const searchVal = searchTxInput.value.toLowerCase().trim();
   
+  // Advanced filters values
+  const categoryFilter = document.getElementById('filter-category-select')?.value || 'all';
+  const accountFilter = document.getElementById('filter-account-select')?.value || 'all';
+  const dateFilter = document.getElementById('filter-date-input')?.value || '';
+  const tagsFilter = document.getElementById('filter-tags-input')?.value.toLowerCase().trim() || '';
+  const minAmtFilter = parseFloat(document.getElementById('filter-min-amount')?.value) || 0;
+  const maxAmtFilter = parseFloat(document.getElementById('filter-max-amount')?.value) || Infinity;
+  
   let result = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
   
+  // Filter by search bar (Description match)
   if (searchVal) {
+    result = result.filter(t => t.description.toLowerCase().includes(searchVal));
+  }
+  
+  // Filter by Category Select
+  if (categoryFilter !== 'all') {
+    result = result.filter(t => t.categoryId === categoryFilter);
+  }
+  
+  // Filter by Account/Payment Select
+  if (accountFilter !== 'all') {
+    result = result.filter(t => (t.account || 'cash') === accountFilter);
+  }
+  
+  // Filter by Specific Date
+  if (dateFilter) {
+    result = result.filter(t => t.date === dateFilter);
+  }
+  
+  // Filter by Tags
+  if (tagsFilter) {
+    result = result.filter(t => t.description.toLowerCase().includes(tagsFilter));
+  }
+  
+  // Filter by Amount Range
+  if (minAmtFilter > 0 || maxAmtFilter < Infinity) {
     result = result.filter(t => {
-      const descMatch = t.description.toLowerCase().includes(searchVal);
-      const cat = categories[t.categoryId];
-      const catMatch = cat ? cat.name.toLowerCase().includes(searchVal) : false;
-      const amountMatch = t.amount.toString().includes(searchVal);
-      return descMatch || catMatch || amountMatch;
+      const amt = parseFloat(t.amount);
+      return amt >= minAmtFilter && amt <= maxAmtFilter;
     });
   }
   
@@ -1048,6 +1080,16 @@ function populateFormDropdowns() {
     });
     memberSelect.innerHTML = memHtml;
   }
+
+  // 3. Filter Category Select in Ledger view
+  const filterCatSelect = document.getElementById('filter-category-select');
+  if (filterCatSelect) {
+    let catHtml = '<option value="all">All Categories</option>';
+    Object.keys(categories).forEach(k => {
+      catHtml += `<option value="${k}">${categories[k].name}</option>`;
+    });
+    filterCatSelect.innerHTML = catHtml;
+  }
 }
 
 // --- GOOGLE SHEETS NETWORK SYNC ---
@@ -1295,6 +1337,127 @@ function setupEventListeners() {
 
   // Search input change events
   searchTxInput.addEventListener('input', renderFullTransactions);
+
+  // Advanced Filters toggle and reset bindings
+  const btnToggleFilters = document.getElementById('btn-toggle-filters');
+  const filtersPanel = document.getElementById('ledger-filters-panel');
+  if (btnToggleFilters && filtersPanel) {
+    btnToggleFilters.onclick = () => {
+      const isHidden = filtersPanel.style.display === 'none';
+      filtersPanel.style.display = isHidden ? 'flex' : 'none';
+      btnToggleFilters.style.background = isHidden ? 'var(--apple-blue)' : 'var(--apple-card)';
+      btnToggleFilters.style.color = isHidden ? 'white' : 'var(--apple-text)';
+    };
+  }
+
+  const btnClearFilters = document.getElementById('btn-clear-filters');
+  if (btnClearFilters) {
+    btnClearFilters.onclick = () => {
+      if (document.getElementById('filter-category-select')) document.getElementById('filter-category-select').value = 'all';
+      if (document.getElementById('filter-account-select')) document.getElementById('filter-account-select').value = 'all';
+      if (document.getElementById('filter-date-input')) document.getElementById('filter-date-input').value = '';
+      if (document.getElementById('filter-tags-input')) document.getElementById('filter-tags-input').value = '';
+      if (document.getElementById('filter-min-amount')) document.getElementById('filter-min-amount').value = '';
+      if (document.getElementById('filter-max-amount')) document.getElementById('filter-max-amount').value = '';
+      if (searchTxInput) searchTxInput.value = '';
+      
+      renderFullTransactions();
+      showToast("Search filters reset.");
+    };
+  }
+
+  const filterInputs = [
+    'filter-category-select',
+    'filter-account-select',
+    'filter-date-input',
+    'filter-tags-input',
+    'filter-min-amount',
+    'filter-max-amount'
+  ];
+  
+  filterInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', renderFullTransactions);
+      el.addEventListener('change', renderFullTransactions);
+    }
+  });
+
+  // Setup Auto-Category detector
+  setupAutoCategoryDetector();
+  
+  // Setup Voice Entry
+  let recognition = null;
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRec();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+  }
+
+  const btnVoiceAdd = document.getElementById('btn-voice-add');
+  const voiceIcon = document.getElementById('voice-icon');
+  const voiceBtnText = document.getElementById('voice-btn-text');
+  const voiceWaves = document.getElementById('voice-waves-container');
+  let isListening = false;
+  
+  if (btnVoiceAdd) {
+    btnVoiceAdd.onclick = () => {
+      if (recognition) {
+        if (isListening) {
+          recognition.stop();
+        } else {
+          isListening = true;
+          voiceIcon.className = 'fas fa-microphone-slash';
+          voiceBtnText.innerText = "Listening...";
+          if (voiceWaves) voiceWaves.style.display = 'flex';
+          
+          recognition.start();
+        }
+      } else {
+        // Fallback prompt for simulation
+        const testPhrase = prompt("Voice Entry (Simulated)\nSpeak your transaction details below:\n(e.g., 'Spent 750 on fuel via UPI')", "Spent 850 on Starbucks coffee via Credit Card");
+        if (testPhrase) {
+          parseVoiceInput(testPhrase);
+        }
+      }
+    };
+    
+    if (recognition) {
+      recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        parseVoiceInput(text);
+      };
+      
+      recognition.onerror = (event) => {
+        console.error("Speech Recognition Error: ", event.error);
+        showToast("Speech recognition error.");
+        stopListeningState();
+      };
+      
+      recognition.onend = () => {
+        stopListeningState();
+      };
+    }
+  }
+  
+  function stopListeningState() {
+    isListening = false;
+    if (voiceIcon) voiceIcon.className = 'fas fa-microphone';
+    if (voiceBtnText) voiceBtnText.innerText = "Voice Entry";
+    if (voiceWaves) voiceWaves.style.display = 'none';
+  }
+  
+  // Setup Mock OCR Scan
+  const receiptFileInput = document.getElementById('receipt-file-input');
+  if (receiptFileInput) {
+    receiptFileInput.onchange = (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleReceiptOcr(e.target.files[0]);
+      }
+    };
+  }
 
   // Submit Add Transaction Form
   addTxForm.addEventListener('submit', (e) => {
@@ -2928,6 +3091,301 @@ function setupPullToRefresh() {
     } else {
       ptr.style.height = '0';
       ptr.style.opacity = '0';
+    }
+  });
+}
+
+function renderReminders() {
+  const container = document.getElementById('smart-reminders-box');
+  if (!container) return;
+  
+  const alerts = [];
+  const todayStr = new Date().toISOString().split('T')[0];
+  
+  // 1. Add Today's Expenses Reminder
+  const todayTxs = transactions.filter(t => t.date === todayStr);
+  if (todayTxs.length === 0) {
+    alerts.push({
+      type: 'warning',
+      icon: '📝',
+      title: "No Expenses Logged Today",
+      subtitle: "Tap to record your spending for today.",
+      actionText: "Log Now",
+      action: () => {
+        const fab = document.querySelector('.fab-btn');
+        if (fab) fab.click();
+      }
+    });
+  }
+  
+  // 2. Pay Bills & Subscription Renewal Reminders
+  if (window.subscriptions) {
+    window.subscriptions.forEach(s => {
+      if (s.status === 'unpaid') {
+        const diffTime = new Date(s.nextDueDate) - new Date();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 3) {
+          const dueMsg = diffDays < 0 ? `Overdue by ${Math.abs(diffDays)} days` : (diffDays === 0 ? "Due today" : `Due in ${diffDays} days`);
+          alerts.push({
+            type: 'danger',
+            icon: '🔔',
+            title: `${s.name} Renewal`,
+            subtitle: `${dueMsg} (${currencySymbol}${s.amount})`,
+            actionText: "Renew",
+            action: () => {
+              openOverlay(document.getElementById('tool-subs-overlay'));
+              if (typeof renderSubscriptions === 'function') renderSubscriptions();
+            }
+          });
+        }
+      }
+    });
+  }
+  
+  // 3. EMI Due Reminder
+  if (window.loans) {
+    window.loans.forEach(l => {
+      if (l.remainingBalance > 0 && l.nextEmiDate) {
+        const diffTime = new Date(l.nextEmiDate) - new Date();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 5) {
+          const dueMsg = diffDays < 0 ? `Overdue by ${Math.abs(diffDays)} days` : (diffDays === 0 ? "Due today" : `Due in ${diffDays} days`);
+          alerts.push({
+            type: 'danger',
+            icon: '💵',
+            title: `EMI: ${l.name}`,
+            subtitle: `${dueMsg} (${currencySymbol}${l.emiAmount.toLocaleString()})`,
+            actionText: "Pay EMI",
+            action: () => {
+              openOverlay(document.getElementById('tool-emi-overlay'));
+              if (typeof renderLoans === 'function') renderLoans();
+            }
+          });
+        }
+      }
+    });
+  }
+  
+  // 4. Savings Goal Trajectory Reminder
+  if (goals && goals.length > 0) {
+    goals.forEach(g => {
+      const pct = (g.current / g.target) * 100;
+      if (pct < 40) {
+        alerts.push({
+          type: 'info',
+          icon: '🎯',
+          title: `Boost "${g.name}" Goal`,
+          subtitle: `Currently at ${pct.toFixed(0)}% of target ${currencySymbol}${g.target}`,
+          actionText: "Save",
+          action: () => {
+            openOverlay(document.getElementById('tool-goals-overlay'));
+            if (typeof renderGoals === 'function') renderGoals();
+          }
+        });
+      }
+    });
+  }
+  
+  if (alerts.length === 0) {
+    container.style.display = 'none';
+    container.innerHTML = '';
+  } else {
+    container.style.display = 'flex';
+    container.innerHTML = alerts.map((a, idx) => {
+      let borderClass = '';
+      if (a.type === 'warning') borderClass = 'warning';
+      else if (a.type === 'info') borderClass = 'info';
+      
+      return `
+        <div class="reminder-alert-card ${borderClass}" style="width: 100%;">
+          <div class="reminder-alert-card-left">
+            <span class="reminder-alert-icon">${a.icon}</span>
+            <div class="reminder-alert-text">
+              <span class="reminder-alert-title">${a.title}</span>
+              <span class="reminder-alert-subtitle">${a.subtitle}</span>
+            </div>
+          </div>
+          <button class="reminder-action-btn" onclick="triggerReminderAction(${idx})">${a.actionText}</button>
+        </div>
+      `;
+    }).join('');
+    
+    // Store actions in a global window array for trigger callback
+    window.reminderActions = alerts.map(a => a.action);
+  }
+}
+
+// Global action dispatcher for reminders
+window.triggerReminderAction = function(idx) {
+  if (window.reminderActions && window.reminderActions[idx]) {
+    window.reminderActions[idx]();
+  }
+};
+
+function parseVoiceInput(text) {
+  text = text.toLowerCase();
+  
+  // Extract number (amount)
+  const numberMatches = text.match(/\d+([.,]\d+)?/);
+  let amount = 0;
+  if (numberMatches) {
+    amount = parseFloat(numberMatches[0]);
+  } else {
+    const words = text.split(' ');
+    const numWords = {
+      'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+      'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+      'hundred': 100, 'thousand': 1000
+    };
+    words.forEach((w, idx) => {
+      if (numWords[w]) {
+        if (w === 'hundred' && idx > 0 && numWords[words[idx-1]]) {
+          amount = numWords[words[idx-1]] * 100;
+        } else if (w === 'thousand' && idx > 0 && numWords[words[idx-1]]) {
+          amount = numWords[words[idx-1]] * 1000;
+        } else {
+          amount = numWords[w];
+        }
+      }
+    });
+  }
+  
+  if (amount > 0) {
+    document.getElementById('tx-amount-input').value = amount;
+  }
+  
+  let matchedCat = null;
+  const keywords = {
+    food: ['food', 'pizza', 'burger', 'restaurant', 'hotel', 'lunch', 'dinner', 'groceries', 'milk', 'swiggy', 'zomato', 'snack', 'tea', 'coffee', 'cafe', 'starbucks'],
+    transport: ['uber', 'ola', 'taxi', 'auto', 'metro', 'bus', 'train', 'flight', 'ticket', 'petrol', 'diesel', 'fuel', 'shell'],
+    rent: ['rent', 'flat', 'apartment', 'pg', 'room'],
+    shopping: ['shop', 'shopping', 'clothes', 'shoes', 'amazon', 'flipkart', 'mall', 'tshirt', 'dress', 'dmart'],
+    bills: ['bill', 'electricity', 'water', 'wifi', 'broadband', 'recharge', 'recharges', 'gas', 'dth'],
+    emi: ['emi', 'loan', 'installment', 'debt'],
+    entertainment: ['movie', 'netflix', 'theatre', 'show', 'game', 'gaming', 'pub', 'club', 'party'],
+    health: ['doctor', 'medicine', 'hospital', 'pharma', 'clinic', 'dentist', 'health'],
+    education: ['college', 'school', 'books', 'fees', 'exam', 'course']
+  };
+  
+  Object.keys(keywords).forEach(catId => {
+    keywords[catId].forEach(kw => {
+      if (text.includes(kw)) {
+        matchedCat = catId;
+      }
+    });
+  });
+  
+  if (matchedCat) {
+    document.getElementById('tx-category-select').value = matchedCat;
+    document.getElementById('auto-cat-badge').style.display = 'inline-flex';
+  } else {
+    document.getElementById('auto-cat-badge').style.display = 'none';
+  }
+  
+  let matchedAccount = 'cash';
+  const accountsWords = {
+    cash: ['cash', 'in hand'],
+    bank: ['bank', 'account', 'card', 'credit card'],
+    card: ['credit card', 'card dues'],
+    upi: ['upi', 'gpay', 'phonepe', 'paytm', 'wallet', 'online']
+  };
+  Object.keys(accountsWords).forEach(accId => {
+    accountsWords[accId].forEach(w => {
+      if (text.includes(w)) {
+        matchedAccount = accId;
+      }
+    });
+  });
+  document.getElementById('tx-account-select').value = matchedAccount;
+  
+  let desc = "Voice transaction";
+  if (text.includes("on ")) {
+    desc = text.split("on ")[1];
+  } else if (text.includes("for ")) {
+    desc = text.split("for ")[1];
+  } else {
+    desc = text
+      .replace(/\d+([.,]\d+)?/g, '')
+      .replace(/(rupees|rupee|rs)/g, '')
+      .replace(/(via|using|by)\s+(upi|gpay|phonepe|paytm|cash|bank|card)/gi, '')
+      .trim();
+  }
+  
+  if (desc) {
+    desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+    document.getElementById('tx-desc-input').value = desc;
+  }
+  
+  showToast(`Parsed: ${currencySymbol}${amount} on "${desc}"`);
+}
+
+function handleReceiptOcr(file) {
+  const loader = document.getElementById('ocr-loader-overlay');
+  if (loader) loader.style.display = 'flex';
+  
+  setTimeout(() => {
+    if (loader) loader.style.display = 'none';
+    
+    const outcomes = [
+      { amount: 450, desc: "Starbucks Coffee", cat: "food", acc: "card" },
+      { amount: 320, desc: "Uber Taxi ride", cat: "transport", acc: "upi" },
+      { amount: 1850, desc: "DMart Grocery Items", cat: "shopping", acc: "bank" }
+    ];
+    const picked = outcomes[Math.floor(Math.random() * outcomes.length)];
+    
+    document.getElementById('tx-amount-input').value = picked.amount;
+    document.getElementById('tx-desc-input').value = picked.desc;
+    document.getElementById('tx-category-select').value = picked.cat;
+    document.getElementById('tx-account-select').value = picked.acc;
+    
+    document.getElementById('auto-cat-badge').style.display = 'inline-flex';
+    
+    showToast(`OCR Scan complete: Extracted ${currencySymbol}${picked.amount} from receipt!`);
+  }, 1500);
+}
+
+function setupAutoCategoryDetector() {
+  const descInput = document.getElementById('tx-desc-input');
+  const catSelect = document.getElementById('tx-category-select');
+  const badge = document.getElementById('auto-cat-badge');
+  
+  if (!descInput || !catSelect || !badge) return;
+  
+  descInput.addEventListener('input', () => {
+    const text = descInput.value.toLowerCase().trim();
+    if (!text) {
+      badge.style.display = 'none';
+      return;
+    }
+    
+    let matched = null;
+    const keywords = {
+      food: ['food', 'pizza', 'burger', 'restaurant', 'hotel', 'lunch', 'dinner', 'groceries', 'milk', 'swiggy', 'zomato', 'snack', 'tea', 'coffee', 'cafe', 'starbucks', 'kfc', 'mcdonalds'],
+      transport: ['uber', 'ola', 'taxi', 'auto', 'metro', 'bus', 'train', 'flight', 'ticket', 'petrol', 'diesel', 'fuel', 'shell', 'travel'],
+      rent: ['rent', 'flat', 'apartment', 'pg', 'room', 'lease'],
+      shopping: ['shop', 'shopping', 'clothes', 'shoes', 'amazon', 'flipkart', 'mall', 'tshirt', 'dress', 'dmart', 'zara', 'h&m'],
+      bills: ['bill', 'electricity', 'water', 'wifi', 'broadband', 'recharge', 'recharges', 'gas', 'dth', 'utility'],
+      emi: ['emi', 'loan', 'installment', 'debt'],
+      entertainment: ['movie', 'netflix', 'theatre', 'show', 'game', 'gaming', 'pub', 'club', 'party', 'spotify', 'hotstar'],
+      health: ['doctor', 'medicine', 'hospital', 'pharma', 'clinic', 'dentist', 'health', 'medical', 'prescription'],
+      education: ['college', 'school', 'books', 'fees', 'exam', 'course', 'academy', 'tuition']
+    };
+    
+    Object.keys(keywords).forEach(catId => {
+      keywords[catId].forEach(kw => {
+        if (text.includes(kw)) {
+          matched = catId;
+        }
+      });
+    });
+    
+    if (matched && transactionType === 'expense') {
+      catSelect.value = matched;
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
     }
   });
 }

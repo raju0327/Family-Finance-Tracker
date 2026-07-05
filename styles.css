@@ -1697,3 +1697,74 @@ body.theme-futuristic .radial-progress-circle-bar {
 #goal-contribution-overlay {
   z-index: 2000 !important;
 }
+
+/* Voice wave animation */
+.voice-bar {
+  display: inline-block;
+  width: 3px;
+  height: 6px;
+  background-color: var(--apple-purple);
+  border-radius: 2px;
+  animation: voiceBounce 0.8s ease-in-out infinite alternate;
+}
+.voice-bar:nth-child(2) { animation-delay: 0.15s; }
+.voice-bar:nth-child(3) { animation-delay: 0.3s; }
+.voice-bar:nth-child(4) { animation-delay: 0.45s; }
+.voice-bar:nth-child(5) { animation-delay: 0.6s; }
+
+@keyframes voiceBounce {
+  from { height: 4px; transform: scaleY(1); }
+  to { height: 18px; transform: scaleY(1.5); }
+}
+
+/* Reminder list alert card styling */
+.reminder-alert-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--border-radius-md);
+  border-left: 4px solid var(--apple-red);
+  background: var(--apple-card);
+  border-top: 1px solid var(--apple-border);
+  border-bottom: 1px solid var(--apple-border);
+  border-right: 1px solid var(--apple-border);
+  box-shadow: var(--shadow-card);
+  animation: appleFadeIn 0.3s ease-out;
+}
+.reminder-alert-card.warning {
+  border-left-color: var(--apple-orange);
+}
+.reminder-alert-card.info {
+  border-left-color: var(--apple-blue);
+}
+.reminder-alert-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reminder-alert-icon {
+  font-size: 1.1rem;
+}
+.reminder-alert-text {
+  display: flex;
+  flex-direction: column;
+}
+.reminder-alert-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--apple-text);
+}
+.reminder-alert-subtitle {
+  font-size: 0.6rem;
+  color: var(--apple-text-secondary);
+}
+.reminder-action-btn {
+  background: none;
+  border: none;
+  color: var(--apple-blue);
+  font-weight: 700;
+  font-size: 0.65rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
