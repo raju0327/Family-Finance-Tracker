@@ -3231,8 +3231,8 @@ function renderReminders() {
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-            <button class="reminder-action-btn" onclick="triggerReminderAction(${idx})">${a.actionText}</button>
-            <button class="reminder-close-btn" style="background: none; border: none; color: var(--apple-text-secondary); cursor: pointer; font-size: 0.85rem; padding: 4px 6px; display: flex; align-items: center; justify-content: center; opacity: 0.65; transition: opacity 0.2s;" onclick="dismissReminderDirectly('${alertId}')" title="Dismiss Reminder">
+            <button class="reminder-action-btn" data-idx="${idx}">${a.actionText}</button>
+            <button class="reminder-close-btn" data-alert-id="${alertId}" style="background: none; border: none; color: var(--apple-text-secondary); cursor: pointer; font-size: 0.85rem; padding: 4px 6px; display: flex; align-items: center; justify-content: center; opacity: 0.65; transition: opacity 0.2s;" title="Dismiss Reminder">
               <i class="fas fa-times"></i>
             </button>
           </div>
@@ -3242,6 +3242,24 @@ function renderReminders() {
     
     // Store active alerts actions
     window.reminderActions = activeAlerts.map(a => a.action);
+    
+    // Attach action triggers programmatically
+    container.querySelectorAll('.reminder-action-btn').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.getAttribute('data-idx'));
+        if (window.reminderActions && window.reminderActions[idx]) {
+          window.reminderActions[idx]();
+        }
+      };
+    });
+
+    // Attach dismiss triggers programmatically
+    container.querySelectorAll('.reminder-close-btn').forEach(btn => {
+      btn.onclick = () => {
+        const alertId = btn.getAttribute('data-alert-id');
+        dismissReminderDirectly(alertId);
+      };
+    });
     
     // Attach touchswipe listeners to each card
     const cards = container.querySelectorAll('.reminder-alert-card');
@@ -3321,7 +3339,9 @@ window.dismissReminderDirectly = function(alertId) {
     saveDismissedReminders();
   }
   
-  const card = document.querySelector(`.reminder-alert-card[data-alert-id="${alertId}"]`);
+  const cards = Array.from(document.querySelectorAll('.reminder-alert-card'));
+  const card = cards.find(c => c.getAttribute('data-alert-id') === alertId);
+  
   if (card) {
     card.style.transition = 'transform 0.25s ease, opacity 0.25s ease, height 0.25s ease, margin 0.25s ease, padding 0.25s ease';
     card.style.transform = 'scale(0.9)';
