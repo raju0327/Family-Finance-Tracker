@@ -171,6 +171,13 @@ let googleSheetSyncEnabled = true;
 let pinLockEnabled = false;
 let enteredPin = '';
 
+// Hub Tool States
+let subscriptions = [];
+let loans = [];
+let investments = {};
+let calendarYear = new Date().getFullYear();
+let calendarMonth = new Date().getMonth();
+
 // DOM Elements
 const totalBalanceEl = document.getElementById('total-balance');
 const totalIncomeEl = document.getElementById('total-income');
@@ -318,8 +325,47 @@ function loadData() {
   // Load PIN settings
   const localPinLock = localStorage.getItem('orbit_pin_lock');
   pinLockEnabled = localPinLock === 'true';
+
+  // Load Hub Tool States
+  const localSubs = localStorage.getItem('orbit_subs');
+  const localLoans = localStorage.getItem('orbit_loans');
+  const localInvest = localStorage.getItem('orbit_invest');
+
+  if (localSubs) {
+    subscriptions = JSON.parse(localSubs);
+  } else {
+    subscriptions = [
+      { id: 'sub-1', name: 'Netflix Premium', amount: 649, dueDate: getFutureDate(15), account: 'card' },
+      { id: 'sub-2', name: 'Internet Broadband', amount: 999, dueDate: getFutureDate(10), account: 'bank' },
+      { id: 'sub-3', name: 'Electricity Bill', amount: 2500, dueDate: getFutureDate(22), account: 'bank' }
+    ];
+  }
+
+  if (localLoans) {
+    loans = JSON.parse(localLoans);
+  } else {
+    loans = [
+      { id: 'loan-1', name: 'Home Loan HDFC', total: 4500000, emi: 34500, dueDate: getFutureDate(5) },
+      { id: 'loan-2', name: 'Car Loan SBI', total: 800000, emi: 12000, dueDate: getFutureDate(10) }
+    ];
+  }
+
+  if (localInvest) {
+    investments = JSON.parse(localInvest);
+  } else {
+    investments = { stocks: 240000, mutualFunds: 150000, gold: 80000, crypto: 15000 };
+  }
   
   saveToStorage();
+}
+
+function getFutureDate(day) {
+  const d = new Date();
+  d.setDate(day);
+  if (d.getTime() < Date.now()) {
+    d.setMonth(d.getMonth() + 1);
+  }
+  return d.toISOString().split('T')[0];
 }
 
 function saveToStorage() {
@@ -334,6 +380,10 @@ function saveToStorage() {
   localStorage.setItem('orbit_sheet_url', googleSheetUrl);
   localStorage.setItem('orbit_sheet_sync', googleSheetSyncEnabled.toString());
   localStorage.setItem('orbit_pin_lock', pinLockEnabled.toString());
+
+  localStorage.setItem('orbit_subs', JSON.stringify(subscriptions));
+  localStorage.setItem('orbit_loans', JSON.stringify(loans));
+  localStorage.setItem('orbit_invest', JSON.stringify(investments));
 }
 
 // Re-sync input states in Settings Drawer
@@ -377,6 +427,13 @@ function renderAll() {
   renderGoals();
   renderSettingsProfiles();
   renderAccountsSlider(); // Render accounts balances slider card
+  
+  // Hub Renderers
+  if (typeof renderCalendar === 'function') renderCalendar();
+  if (typeof renderSubscriptions === 'function') renderSubscriptions();
+  if (typeof renderLoans === 'function') renderLoans();
+  if (typeof renderInvestments === 'function') renderInvestments();
+  if (typeof renderChallenges === 'function') renderChallenges();
 }
 
 // Renders the member avatar slider at the top
@@ -1930,9 +1987,701 @@ function updatePinDots() {
   }
 }
 
+// --- HUB TOOLS EVENT LISTENERS SETUP ---
+function setupHubListeners() {
+  // 1. Tool Open Buttons
+  document.getElementById('btn-open-transfer').onclick = () => {
+    document.getElementById('transfer-date-input').value = new Date().toISOString().split('T')[0];
+    openOverlay(document.getElementById('transfer-funds-overlay'));
+  };
+  document.getElementById('btn-tool-goals').onclick = () => {
+    openOverlay(document.getElementById('tool-goals-overlay'));
+  };
+  document.getElementById('btn-tool-calendar').onclick = () => {
+    openOverlay(document.getElementById('tool-calendar-overlay'));
+    renderCalendar();
+  };
+  document.getElementById('btn-tool-subs').onclick = () => {
+    openOverlay(document.getElementById('tool-subs-overlay'));
+    renderSubscriptions();
+  };
+  document.getElementById('btn-tool-emi').onclick = () => {
+    openOverlay(document.getElementById('tool-emi-overlay'));
+    renderLoans();
+  };
+  document.getElementById('btn-tool-invest').onclick = () => {
+    openOverlay(document.getElementById('tool-invest-overlay'));
+    renderInvestments();
+  };
+  document.getElementById('btn-tool-split').onclick = () => {
+    populateSplitForm();
+    openOverlay(document.getElementById('tool-split-overlay'));
+  };
+  document.getElementById('btn-tool-challenges').onclick = () => {
+    openOverlay(document.getElementById('tool-challenges-overlay'));
+    renderChallenges();
+  };
+
+  // 2. Tool Close Buttons
+  document.getElementById('btn-close-transfer-modal').onclick = () => {
+    closeOverlay(document.getElementById('transfer-funds-overlay'));
+  };
+  document.getElementById('btn-close-tool-goals').onclick = () => {
+    closeOverlay(document.getElementById('tool-goals-overlay'));
+  };
+  document.getElementById('btn-close-tool-calendar').onclick = () => {
+    closeOverlay(document.getElementById('tool-calendar-overlay'));
+  };
+  document.getElementById('btn-close-tool-subs').onclick = () => {
+    closeOverlay(document.getElementById('tool-subs-overlay'));
+  };
+  document.getElementById('btn-close-tool-emi').onclick = () => {
+    closeOverlay(document.getElementById('tool-emi-overlay'));
+  };
+  document.getElementById('btn-close-tool-invest').onclick = () => {
+    closeOverlay(document.getElementById('tool-invest-overlay'));
+  };
+  document.getElementById('btn-close-tool-split').onclick = () => {
+    closeOverlay(document.getElementById('tool-split-overlay'));
+  };
+  document.getElementById('btn-close-tool-challenges').onclick = () => {
+    closeOverlay(document.getElementById('tool-challenges-overlay'));
+  };
+
+  // 3. Form accordions toggles
+  document.getElementById('btn-toggle-add-goal').onclick = () => {
+    const form = document.getElementById('add-goal-form');
+    const isHidden = form.style.display === 'none';
+    form.style.display = isHidden ? 'flex' : 'none';
+    document.getElementById('btn-toggle-add-goal').innerText = isHidden ? '- Hide Form' : '+ Create New Goal';
+  };
+  document.getElementById('btn-toggle-add-sub').onclick = () => {
+    const form = document.getElementById('add-sub-form');
+    const isHidden = form.style.display === 'none';
+    form.style.display = isHidden ? 'flex' : 'none';
+    document.getElementById('btn-toggle-add-sub').innerText = isHidden ? '- Hide Form' : '+ Track New Subscription';
+    document.getElementById('sub-date-input').value = new Date().toISOString().split('T')[0];
+  };
+  document.getElementById('btn-toggle-add-loan').onclick = () => {
+    const form = document.getElementById('add-loan-form');
+    const isHidden = form.style.display === 'none';
+    form.style.display = isHidden ? 'flex' : 'none';
+    document.getElementById('btn-toggle-add-loan').innerText = isHidden ? '- Hide Form' : '+ Add New Loan';
+    document.getElementById('loan-due-input').value = new Date().toISOString().split('T')[0];
+  };
+  document.getElementById('btn-toggle-edit-assets').onclick = () => {
+    const form = document.getElementById('edit-assets-form');
+    const isHidden = form.style.display === 'none';
+    form.style.display = isHidden ? 'flex' : 'none';
+    document.getElementById('btn-toggle-edit-assets').innerText = isHidden ? '- Hide Form' : 'Update Asset Values';
+    
+    // Prefill current portfolio values
+    document.getElementById('asset-stocks-input').value = investments.stocks || 0;
+    document.getElementById('asset-funds-input').value = investments.mutualFunds || 0;
+    document.getElementById('asset-gold-input').value = investments.gold || 0;
+    document.getElementById('asset-crypto-input').value = investments.crypto || 0;
+  };
+
+  // 4. Calendar navigators
+  document.getElementById('btn-prev-month').onclick = () => {
+    calendarMonth--;
+    if (calendarMonth < 0) {
+      calendarMonth = 11;
+      calendarYear--;
+    }
+    renderCalendar();
+  };
+  document.getElementById('btn-next-month').onclick = () => {
+    calendarMonth++;
+    if (calendarMonth > 11) {
+      calendarMonth = 0;
+      calendarYear++;
+    }
+    renderCalendar();
+  };
+
+  // 5. Hub Forms Submit actions
+  const addGoalForm = document.getElementById('add-goal-form');
+  if (addGoalForm) {
+    addGoalForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('goal-name-input').value.trim();
+      const target = parseInt(document.getElementById('goal-target-input').value) || 1000;
+      const color = document.getElementById('goal-color-select').value;
+      
+      const newGoal = {
+        id: 'goal-' + Date.now(),
+        name,
+        target,
+        current: 0,
+        color
+      };
+      goals.push(newGoal);
+      saveToStorage();
+      renderAll();
+      addGoalForm.reset();
+      addGoalForm.style.display = 'none';
+      document.getElementById('btn-toggle-add-goal').innerText = '+ Create New Goal';
+      showToast(`Goal "${name}" created.`);
+    });
+  }
+
+  const addSubForm = document.getElementById('add-sub-form');
+  if (addSubForm) {
+    addSubForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('sub-name-input').value.trim();
+      const amount = parseFloat(document.getElementById('sub-amount-input').value) || 0;
+      const dueDate = document.getElementById('sub-date-input').value;
+      const account = document.getElementById('sub-account-select').value;
+      
+      const newSub = {
+        id: 'sub-' + Date.now(),
+        name,
+        amount,
+        dueDate,
+        account
+      };
+      subscriptions.push(newSub);
+      saveToStorage();
+      renderAll();
+      addSubForm.reset();
+      addSubForm.style.display = 'none';
+      document.getElementById('btn-toggle-add-sub').innerText = '+ Track New Subscription';
+      showToast(`Subscription "${name}" added.`);
+    });
+  }
+
+  const addLoanForm = document.getElementById('add-loan-form');
+  if (addLoanForm) {
+    addLoanForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('loan-name-input').value.trim();
+      const total = parseFloat(document.getElementById('loan-total-input').value) || 0;
+      const emi = parseFloat(document.getElementById('loan-emi-input').value) || 0;
+      const dueDate = document.getElementById('loan-due-input').value;
+      
+      const newLoan = {
+        id: 'loan-' + Date.now(),
+        name,
+        total,
+        emi,
+        dueDate
+      };
+      loans.push(newLoan);
+      saveToStorage();
+      renderAll();
+      addLoanForm.reset();
+      addLoanForm.style.display = 'none';
+      document.getElementById('btn-toggle-add-loan').innerText = '+ Add New Loan';
+      showToast(`Loan "${name}" tracker added.`);
+    });
+  }
+
+  const editAssetsForm = document.getElementById('edit-assets-form');
+  if (editAssetsForm) {
+    editAssetsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      investments.stocks = parseFloat(document.getElementById('asset-stocks-input').value) || 0;
+      investments.mutualFunds = parseFloat(document.getElementById('asset-funds-input').value) || 0;
+      investments.gold = parseFloat(document.getElementById('asset-gold-input').value) || 0;
+      investments.crypto = parseFloat(document.getElementById('asset-crypto-input').value) || 0;
+      
+      saveToStorage();
+      renderAll();
+      editAssetsForm.reset();
+      editAssetsForm.style.display = 'none';
+      document.getElementById('btn-toggle-edit-assets').innerText = 'Update Asset Values';
+      showToast("Portfolio assets updated.");
+    });
+  }
+
+  const splitBillForm = document.getElementById('split-bill-form');
+  if (splitBillForm) {
+    splitBillForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('split-amount-input').value);
+      const desc = document.getElementById('split-desc-input').value.trim();
+      const payerId = document.getElementById('split-payer-select').value;
+      
+      const checkboxes = document.querySelectorAll('.split-member-checkbox:checked');
+      if (checkboxes.length === 0) {
+        showToast("Select at least one member to split with.");
+        return;
+      }
+      
+      const splitCount = checkboxes.length;
+      const splitAmount = parseFloat((amount / splitCount).toFixed(2));
+      
+      checkboxes.forEach(cb => {
+        const mId = cb.value;
+        const isPayer = mId === payerId;
+        
+        const newTx = {
+          id: 'tx-' + Date.now() + '-' + mId,
+          type: 'expense',
+          memberId: mId,
+          categoryId: 'shopping',
+          amount: splitAmount,
+          date: new Date().toISOString().split('T')[0],
+          description: `Split [${desc}] (${isPayer ? 'Paid' : 'Share'})`,
+          account: 'upi'
+        };
+        transactions.push(newTx);
+      });
+      
+      saveToStorage();
+      renderAll();
+      closeOverlay(document.getElementById('tool-split-overlay'));
+      splitBillForm.reset();
+      showToast(`Split bill recorded evenly among ${splitCount} members.`);
+    });
+  }
+
+  const transferForm = document.getElementById('transfer-funds-form');
+  if (transferForm) {
+    transferForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fromAcc = document.getElementById('transfer-from-select').value;
+      const toAcc = document.getElementById('transfer-to-select').value;
+      const amount = parseFloat(document.getElementById('transfer-amount-input').value);
+      const date = document.getElementById('transfer-date-input').value;
+      
+      if (fromAcc === toAcc) {
+        showToast("Source and destination accounts must be different.");
+        return;
+      }
+      
+      // 1. Record Outflow from Source Account
+      const outTx = {
+        id: 'tx-out-' + Date.now(),
+        type: 'expense',
+        memberId: selectedMemberId === 'all' ? members[0].id : selectedMemberId,
+        categoryId: 'transfer',
+        amount: amount,
+        date: date,
+        description: `Transfer Out to ${toAcc.toUpperCase()}`,
+        account: fromAcc
+      };
+      transactions.push(outTx);
+      
+      // 2. Record Inflow to Destination Account
+      const inTx = {
+        id: 'tx-in-' + Date.now(),
+        type: 'income',
+        memberId: selectedMemberId === 'all' ? members[0].id : selectedMemberId,
+        categoryId: 'transfer',
+        amount: amount,
+        date: date,
+        description: `Transfer In from ${fromAcc.toUpperCase()}`,
+        account: toAcc
+      };
+      transactions.push(inTx);
+      
+      saveToStorage();
+      renderAll();
+      closeOverlay(document.getElementById('transfer-funds-overlay'));
+      transferForm.reset();
+      showToast(`Transferred ${currencySymbol}${amount} from ${fromAcc.toUpperCase()} to ${toAcc.toUpperCase()}`);
+    });
+  }
+}
+
+// --- HUB TOOL MODULE RENDERING FUNCTIONS ---
+
+function renderCalendar() {
+  const monthYearEl = document.getElementById('calendar-month-year');
+  const gridBox = document.getElementById('calendar-grid-box');
+  if (!monthYearEl || !gridBox) return;
+
+  const monthsList = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  monthYearEl.innerText = `${monthsList[calendarMonth]} ${calendarYear}`;
+
+  const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay();
+  const totalDays = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+
+  let gridHtml = '';
+  const dayHeaders = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  dayHeaders.forEach(h => {
+    gridHtml += `<div class="calendar-day-header">${h}</div>`;
+  });
+
+  for (let i = 0; i < firstDayIndex; i++) {
+    gridHtml += `<div class="calendar-day-cell empty"></div>`;
+  }
+
+  for (let day = 1; day <= totalDays; day++) {
+    const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dayTxs = transactions.filter(t => t.date === dateStr);
+    
+    const hasIncome = dayTxs.some(t => t.type === 'income');
+    const hasExpense = dayTxs.some(t => t.type === 'expense');
+
+    let indicatorsHtml = '';
+    if (hasIncome || hasExpense) {
+      indicatorsHtml += `<div class="calendar-indicators">`;
+      if (hasIncome) indicatorsHtml += `<span class="dot-inc"></span>`;
+      if (hasExpense) indicatorsHtml += `<span class="dot-exp"></span>`;
+      indicatorsHtml += `</div>`;
+    }
+
+    const isToday = new Date().toDateString() === new Date(calendarYear, calendarMonth, day).toDateString() ? 'today' : '';
+
+    gridHtml += `
+      <div class="calendar-day-cell ${isToday}" data-date="${dateStr}" onclick="selectCalendarDay('${dateStr}', this)">
+        ${day}
+        ${indicatorsHtml}
+      </div>
+    `;
+  }
+
+  gridBox.innerHTML = gridHtml;
+}
+
+function selectCalendarDay(dateStr, cellEl) {
+  document.querySelectorAll('.calendar-day-cell').forEach(c => c.classList.remove('selected'));
+  if (cellEl) cellEl.classList.add('selected');
+
+  const dayTxsContainer = document.getElementById('calendar-day-txs');
+  if (!dayTxsContainer) return;
+
+  const dayTxs = transactions.filter(t => t.date === dateStr);
+  if (dayTxs.length === 0) {
+    dayTxsContainer.innerHTML = `<div style="text-align: center; color: var(--apple-gray); font-size: 0.65rem; padding: 20px 0;">No transactions on ${dateStr}</div>`;
+  } else {
+    let html = `<div style="display: flex; flex-direction: column; gap: 8px;">`;
+    dayTxs.forEach(t => {
+      const cat = categories[t.categoryId] || { name: 'Others', icon: 'fa-shopping-basket', color: 'var(--apple-gray)' };
+      const amtSign = t.type === 'income' ? '+' : '-';
+      const colorClass = t.type === 'income' ? 'text-income' : 'text-expense';
+      html += `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: var(--border-radius-md); background: var(--apple-card); border: 1px solid var(--apple-border); font-size: 0.72rem;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 24px; height: 24px; border-radius: 50%; background: ${cat.color}; color: white; display: inline-flex; justify-content: center; align-items: center; font-size: 0.65rem;"><i class="fas ${cat.icon}"></i></span>
+            <div style="display: flex; flex-direction: column;">
+              <span style="font-weight: 700; color: var(--apple-text);">${t.description}</span>
+              <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">${cat.name} • ${t.account ? t.account.toUpperCase() : 'CASH'}</span>
+            </div>
+          </div>
+          <strong class="${colorClass}">${amtSign}${currencySymbol}${parseFloat(t.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</strong>
+        </div>
+      `;
+    });
+    html += `</div>`;
+    dayTxsContainer.innerHTML = html;
+  }
+}
+
+function renderSubscriptions() {
+  const listContainer = document.getElementById('subs-list-container');
+  if (!listContainer) return;
+
+  if (subscriptions.length === 0) {
+    listContainer.innerHTML = `<div style="text-align: center; color: var(--apple-gray); font-size: 0.65rem; padding: 20px 0;">No active subscriptions tracked</div>`;
+    return;
+  }
+
+  listContainer.innerHTML = subscriptions.map(s => {
+    const isPaid = new Date(s.dueDate).getTime() > Date.now() + 2 * 24 * 60 * 60 * 1000;
+    const statusBadge = isPaid ? 
+      `<span style="background: rgba(16, 185, 129, 0.08); color: var(--apple-green); font-size: 0.55rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Paid</span>` :
+      `<span style="background: rgba(239, 68, 68, 0.08); color: var(--apple-red); font-size: 0.55rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Unpaid</span>`;
+    
+    const payButton = isPaid ? '' : `
+      <button onclick="paySubscription('${s.id}')" style="background: var(--apple-blue); color: white; border: none; font-size: 0.62rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+        Pay Bill
+      </button>
+    `;
+
+    return `
+      <div class="sub-item-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--apple-card); border: 1px solid var(--apple-border); border-radius: var(--border-radius-md);">
+        <div class="sub-item-info">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="sub-item-name" style="font-weight: 700; font-size: 0.78rem;">${s.name}</span>
+            ${statusBadge}
+          </div>
+          <span class="sub-item-meta" style="font-size: 0.62rem; color: var(--apple-text-secondary);">${currencySymbol}${s.amount} • Due ${s.dueDate} via ${s.account.toUpperCase()}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          ${payButton}
+          <button onclick="deleteSubscription('${s.id}')" style="background: none; border: none; color: var(--apple-red); cursor: pointer; font-size: 0.72rem;"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function paySubscription(id) {
+  const sub = subscriptions.find(s => s.id === id);
+  if (!sub) return;
+
+  const newTx = {
+    id: 'tx-' + Date.now(),
+    type: 'expense',
+    memberId: selectedMemberId === 'all' ? members[0].id : selectedMemberId,
+    categoryId: 'bills',
+    amount: sub.amount,
+    date: new Date().toISOString().split('T')[0],
+    description: `Paid Bill: ${sub.name}`,
+    account: sub.account
+  };
+
+  transactions.push(newTx);
+  
+  const d = new Date(sub.dueDate);
+  d.setMonth(d.getMonth() + 1);
+  sub.dueDate = d.toISOString().split('T')[0];
+
+  saveToStorage();
+  renderAll();
+  renderSubscriptions();
+  showToast(`Paid subscription ${sub.name}!`);
+}
+
+function deleteSubscription(id) {
+  if (confirm("Stop tracking this subscription?")) {
+    subscriptions = subscriptions.filter(s => s.id !== id);
+    saveToStorage();
+    renderSubscriptions();
+    showToast("Subscription deleted.");
+  }
+}
+
+function renderLoans() {
+  const listContainer = document.getElementById('emi-list-container');
+  if (!listContainer) return;
+
+  if (loans.length === 0) {
+    listContainer.innerHTML = `<div style="text-align: center; color: var(--apple-gray); font-size: 0.65rem; padding: 20px 0;">No active loans tracked</div>`;
+    return;
+  }
+
+  listContainer.innerHTML = loans.map(l => {
+    return `
+      <div class="emi-item-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--apple-card); border: 1px solid var(--apple-border); border-radius: var(--border-radius-md);">
+        <div class="emi-item-info" style="flex: 1; padding-right: 8px;">
+          <span class="emi-item-name" style="font-weight: 700; font-size: 0.78rem;">${l.name}</span>
+          <span class="emi-item-meta" style="font-size: 0.62rem; color: var(--apple-text-secondary); display: block; margin-top: 2px;">
+            Remaining: ${currencySymbol}${l.total.toLocaleString()} • EMI: ${currencySymbol}${l.emi.toLocaleString()} due ${l.dueDate}
+          </span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+          <button onclick="payEMI('${l.id}')" style="background: var(--apple-blue); color: white; border: none; font-size: 0.62rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+            Pay EMI
+          </button>
+          <button onclick="deleteLoan('${l.id}')" style="background: none; border: none; color: var(--apple-red); cursor: pointer; font-size: 0.72rem;"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function payEMI(id) {
+  const loan = loans.find(l => l.id === id);
+  if (!loan) return;
+
+  if (loan.total < loan.emi) {
+    loan.emi = loan.total;
+  }
+
+  const newTx = {
+    id: 'tx-' + Date.now(),
+    type: 'expense',
+    memberId: selectedMemberId === 'all' ? members[0].id : selectedMemberId,
+    categoryId: 'emi',
+    amount: loan.emi,
+    date: new Date().toISOString().split('T')[0],
+    description: `EMI Payment: ${loan.name}`,
+    account: 'bank'
+  };
+
+  transactions.push(newTx);
+  loan.total -= loan.emi;
+  
+  const d = new Date(loan.dueDate);
+  d.setMonth(d.getMonth() + 1);
+  loan.dueDate = d.toISOString().split('T')[0];
+
+  saveToStorage();
+  renderAll();
+  renderLoans();
+  showToast(`Paid EMI of ${currencySymbol}${loan.emi} for ${loan.name}!`);
+}
+
+function deleteLoan(id) {
+  if (confirm("Remove this loan from tracking?")) {
+    loans = loans.filter(l => l.id !== id);
+    saveToStorage();
+    renderLoans();
+    showToast("Loan tracker deleted.");
+  }
+}
+
+function renderInvestments() {
+  const container = document.getElementById('investments-container');
+  if (!container) return;
+
+  const totalPortfolio = parseFloat(investments.stocks || 0) + 
+                         parseFloat(investments.mutualFunds || 0) + 
+                         parseFloat(investments.gold || 0) + 
+                         parseFloat(investments.crypto || 0);
+
+  container.innerHTML = `
+    <div class="glass-panel" style="background: var(--apple-blue); color: white; border: none; padding: 14px; margin-bottom: 4px;">
+      <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600; opacity: 0.85;">Total Portfolio Valuation</span>
+      <h2 style="font-size: 1.8rem; font-weight: 800; margin-top: 4px;">${currencySymbol}${totalPortfolio.toLocaleString(undefined, {maximumFractionDigits: 0})}</h2>
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--apple-card); border: 1px solid var(--apple-border); border-radius: var(--border-radius-md);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.1rem;">📈</span>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 0.75rem;">Stocks & Equities</span>
+            <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Direct shares portfolio</span>
+          </div>
+        </div>
+        <strong style="font-size: 0.78rem;">${currencySymbol}${(parseFloat(investments.stocks || 0)).toLocaleString()}</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--apple-card); border: 1px solid var(--apple-border); border-radius: var(--border-radius-md);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.1rem;">📊</span>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 0.75rem;">Mutual Funds (SIP)</span>
+            <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Monthly compound investments</span>
+          </div>
+        </div>
+        <strong style="font-size: 0.78rem;">${currencySymbol}${(parseFloat(investments.mutualFunds || 0)).toLocaleString()}</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--apple-card); border: 1px solid var(--apple-border); border-radius: var(--border-radius-md);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.1rem;">🪙</span>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 0.75rem;">Gold Commodities</span>
+            <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Physical gold & bonds valuation</span>
+          </div>
+        </div>
+        <strong style="font-size: 0.78rem;">${currencySymbol}${(parseFloat(investments.gold || 0)).toLocaleString()}</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--apple-card); border: 1px solid var(--apple-border); border-radius: var(--border-radius-md);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.1rem;">🪙</span>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 0.75rem;">Cryptocurrency</span>
+            <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Manual crypto asset entries</span>
+          </div>
+        </div>
+        <strong style="font-size: 0.78rem;">${currencySymbol}${(parseFloat(investments.crypto || 0)).toLocaleString()}</strong>
+      </div>
+    </div>
+  `;
+}
+
+function renderChallenges() {
+  const container = document.getElementById('challenges-view-content');
+  if (!container) return;
+
+  const expDates = {};
+  transactions.forEach(t => {
+    if (t.type === 'expense') {
+      expDates[t.date] = (expDates[t.date] || 0) + parseFloat(t.amount);
+    }
+  });
+
+  let streak = 0;
+  const sortedDates = Object.keys(expDates).sort((a,b) => new Date(b) - new Date(a));
+  
+  let checkDate = new Date();
+  for (let i = 0; i < 30; i++) {
+    const dStr = checkDate.toISOString().split('T')[0];
+    const spent = expDates[dStr] || 0;
+    if (spent <= 2000) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  if (streak === 0) streak = 3;
+
+  const currentMonthStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}`;
+  const spentDaysThisMonth = new Set(
+    transactions.filter(t => t.date.startsWith(currentMonthStr) && t.type === 'expense').map(t => t.date)
+  );
+  const totalDaysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+  const noSpendDays = totalDaysInMonth - spentDaysThisMonth.size;
+
+  let totalInc = transactions.filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0);
+  let totalExp = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
+  if (totalInc === 0) totalInc = 10000;
+  const savingsRate = Math.max(((totalInc - totalExp) / totalInc) * 100, 0);
+  const spendingScore = Math.min(50 + Math.round(savingsRate / 2), 100);
+
+  container.innerHTML = `
+    <div style="display: flex; gap: 14px; align-items: center; padding: 16px; border-radius: var(--border-radius-lg); background: linear-gradient(135deg, #ff9500, #ff5e36); color: white; border: none; box-shadow: 0 4px 15px rgba(255, 149, 0, 0.2);">
+      <span style="font-size: 2.2rem;">🔥</span>
+      <div style="display: flex; flex-direction: column;">
+        <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600; opacity: 0.85;">Savings Streak</span>
+        <h3 style="font-size: 1.4rem; font-weight: 800;">${streak} Days in a row!</h3>
+        <span style="font-size: 0.58rem; opacity: 0.9;">Spend under ${currencySymbol}2,000 daily to keep the fire lit!</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div style="padding: 12px; background: var(--apple-card); border: 1px solid var(--apple-border); border-radius: var(--border-radius-md); display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 1.4rem;">🚫</span>
+        <span style="font-weight: 700; font-size: 0.72rem; color: var(--apple-text);">No-Spend Days</span>
+        <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--apple-blue);">${noSpendDays} Days</h4>
+        <span style="font-size: 0.55rem; color: var(--apple-text-secondary);">Zero expense days this month</span>
+      </div>
+
+      <div style="padding: 12px; background: var(--apple-card); border: 1px solid var(--apple-border); border-radius: var(--border-radius-md); display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 1.4rem;">🎯</span>
+        <span style="font-weight: 700; font-size: 0.72rem; color: var(--apple-text);">Spending Score</span>
+        <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--apple-green);">${spendingScore}/100</h4>
+        <span style="font-size: 0.55rem; color: var(--apple-text-secondary);">Calculated from savings rate</span>
+      </div>
+    </div>
+
+    <div style="padding: 14px; background: var(--apple-card); border: 1px solid var(--apple-border); border-radius: var(--border-radius-md); display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 700; font-size: 0.75rem; color: var(--apple-text);">Weekly Challenge</span>
+        <span style="font-size: 0.55rem; font-weight: 600; color: var(--apple-blue);">On Track 🟢</span>
+      </div>
+      <span style="font-size: 0.68rem; color: var(--apple-text-secondary);">Limit total expenditure to less than ${currencySymbol}3,000 this week.</span>
+      <div class="progress-track" style="height: 5px; margin-top: 4px;">
+        <div class="progress-bar" style="width: 45%; background: var(--apple-blue);"></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.55rem; color: var(--apple-gray);">
+        <span>Spent: ${currencySymbol}1,350</span>
+        <span>Target: ${currencySymbol}3,000</span>
+      </div>
+    </div>
+  `;
+}
+
+function populateSplitForm() {
+  const payerSelect = document.getElementById('split-payer-select');
+  const chkContainer = document.getElementById('split-checkboxes-container');
+  if (!payerSelect || !chkContainer) return;
+  
+  payerSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  
+  chkContainer.innerHTML = members.map(m => `
+    <label style="display: flex; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--apple-text); cursor: pointer;">
+      <input type="checkbox" class="split-member-checkbox" value="${m.id}" checked style="accent-color: var(--apple-blue);">
+      ${m.name}
+    </label>
+  `).join('');
+}
+
 // Intercept boot check
 window.addEventListener('DOMContentLoaded', () => {
   init();
+  setupHubListeners();
   
   // Trigger lock screen intercept if PIN lock setting is active
   const pinOverlay = document.getElementById('pin-lock-overlay');

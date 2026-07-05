@@ -79,7 +79,10 @@
           <div class="accounts-slider-container" style="margin-bottom: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 4px;">
               <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); letter-spacing: 0.5px;">My Accounts & Wallets</span>
-              <span style="font-size: 0.6rem; color: var(--apple-blue); font-weight: 500;">Swipe left <i class="fas fa-arrow-right"></i></span>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span id="btn-open-transfer" style="font-size: 0.62rem; color: var(--apple-blue); font-weight: 700; cursor: pointer; text-decoration: underline;"><i class="fas fa-random"></i> Transfer</span>
+                <span style="font-size: 0.6rem; color: var(--apple-gray); font-weight: 500;">Swipe <i class="fas fa-arrow-right"></i></span>
+              </div>
             </div>
             <div class="accounts-carousel" id="accounts-carousel-list" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
               <!-- Dynamic Account Cards will be loaded here -->
@@ -166,14 +169,63 @@
           </div>
         </div>
 
-        <!-- ================= SAVINGS GOALS VIEW ================= -->
-        <div id="goals-view" class="view-panel">
-          <div class="glass-panel" style="background: none; border: none; box-shadow: none; padding: 0;">
-            <div class="chart-header" style="margin-bottom: 12px;">
-              <h3>Savings Goals</h3>
-            </div>
-            <div id="goals-container" style="display: flex; flex-direction: column; gap: 14px;">
-              <!-- Loaded Dynamically -->
+        <!-- ================= TOOLS HUB VIEW ================= -->
+        <div id="tools-view" class="view-panel">
+          <div class="glass-panel" style="padding: 16px; margin-bottom: 16px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: var(--apple-text);">Feature Hub</h3>
+            
+            <div class="tools-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;">
+              <!-- Savings Goals -->
+              <div class="tool-card-btn" id="btn-tool-goals" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+                <span style="font-size: 1.5rem;">🎯</span>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Savings Goals</span>
+                <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Track savings targets</span>
+              </div>
+              
+              <!-- Calendar View -->
+              <div class="tool-card-btn" id="btn-tool-calendar" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+                <span style="font-size: 1.5rem;">📅</span>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Calendar Ledger</span>
+                <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">View daily statements</span>
+              </div>
+              
+              <!-- Bills & Subscriptions -->
+              <div class="tool-card-btn" id="btn-tool-subs" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+                <span style="font-size: 1.5rem;">💳</span>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Subscriptions</span>
+                <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Netflix, Utility bills</span>
+              </div>
+              
+              <!-- Loan & EMI Tracker -->
+              <div class="tool-card-btn" id="btn-tool-emi" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+                <span style="font-size: 1.5rem;">💵</span>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">EMI & Loans</span>
+                <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Remaining debts list</span>
+              </div>
+              
+              <!-- Investment SIP Tracker -->
+              <div class="tool-card-btn" id="btn-tool-invest" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+                <span style="font-size: 1.5rem;">📈</span>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Investments</span>
+                <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Mutual funds & SIPs</span>
+              </div>
+              
+              <!-- Split Bills -->
+              <div class="tool-card-btn" id="btn-tool-split" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+                <span style="font-size: 1.5rem;">👨‍👩‍👧</span>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Split Expenses</span>
+                <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Divide bills in family</span>
+              </div>
+              
+              <!-- Challenges & Streak -->
+              <div class="tool-card-btn" id="btn-tool-challenges" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; grid-column: span 2; transition: all 0.25s ease;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                  <span style="font-size: 1.5rem;">🏆</span>
+                  <span class="badge" style="background: var(--apple-blue); color: white; font-size: 0.55rem; padding: 2px 6px; border-radius: 10px;">Gamification</span>
+                </div>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Challenges & Streaks</span>
+                <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Savings streak & No-Spend days count</span>
+              </div>
             </div>
           </div>
         </div>
@@ -200,9 +252,9 @@
           <i class="fas fa-chart-pie"></i>
           <span>Budgets</span>
         </a>
-        <a href="#" class="nav-item nav-trigger" data-target="goals-view">
-          <i class="fas fa-bullseye"></i>
-          <span>Goals</span>
+        <a href="#" class="nav-item nav-trigger" data-target="tools-view" id="nav-tools-trigger">
+          <i class="fas fa-cubes"></i>
+          <span>Hub</span>
         </a>
       </nav>
 
@@ -576,6 +628,297 @@
           </select>
         </div>
         <button type="submit" class="glass-submit-btn">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Savings Goals Tool -->
+  <div class="modal-overlay" id="tool-goals-overlay">
+    <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
+      <div class="modal-header" style="flex-shrink: 0;">
+        <h3>🎯 Savings Goals</h3>
+        <button class="btn-close-modal" id="btn-close-tool-goals">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div style="flex: 1; overflow-y: auto; padding-right: 2px; margin-bottom: 12px;">
+        <div id="goals-container" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+          <!-- Loaded dynamically -->
+        </div>
+        
+        <!-- Accordion Form: Add Goal -->
+        <button id="btn-toggle-add-goal" class="glass-submit-btn" style="background: var(--apple-blue); margin-top: 10px;">+ Create New Goal</button>
+        <form id="add-goal-form" style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
+          <div class="form-group">
+            <label for="goal-name-input">Goal Name</label>
+            <input type="text" id="goal-name-input" class="glass-input" required placeholder="e.g. New iPhone">
+          </div>
+          <div class="form-group">
+            <label for="goal-target-input">Target Amount</label>
+            <input type="number" id="goal-target-input" class="glass-input" required min="1" placeholder="50000">
+          </div>
+          <div class="form-group">
+            <label for="goal-color-select">Color Accent</label>
+            <select id="goal-color-select" class="glass-select">
+              <option value="#007aff">Blue</option>
+              <option value="#34c759">Green</option>
+              <option value="#ff9500">Orange</option>
+              <option value="#ff3b30">Red</option>
+              <option value="#af52de">Purple</option>
+            </select>
+          </div>
+          <button type="submit" class="glass-submit-btn" style="margin-top: 6px;">Add Goal</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Calendar View Tool -->
+  <div class="modal-overlay" id="tool-calendar-overlay">
+    <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
+      <div class="modal-header" style="flex-shrink: 0;">
+        <h3>📅 Calendar Statement</h3>
+        <button class="btn-close-modal" id="btn-close-tool-calendar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--apple-card); padding: 8px 12px; border-radius: var(--border-radius-md); border: 1px solid var(--apple-border);">
+          <button id="btn-prev-month" class="btn-link" style="color: var(--apple-blue);"><i class="fas fa-chevron-left"></i></button>
+          <span id="calendar-month-year" style="font-weight: 700; font-size: 0.85rem; color: var(--apple-text);">July 2026</span>
+          <button id="btn-next-month" class="btn-link" style="color: var(--apple-blue);"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        
+        <!-- Calendar Grid -->
+        <div id="calendar-grid-box" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; font-size: 0.72rem; padding: 4px;">
+          <!-- Loaded Dynamically -->
+        </div>
+
+        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); margin-top: 10px;">
+          Day Transactions
+        </div>
+        <div id="calendar-day-txs" style="flex: 1; min-height: 100px; overflow-y: auto; border: 1px solid var(--apple-border); border-radius: var(--border-radius-md); padding: 8px; background: var(--apple-bg);">
+          <div style="text-align: center; color: var(--apple-gray); font-size: 0.65rem; padding: 20px 0;">Tap a calendar date to view transactions</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Subscriptions Tool -->
+  <div class="modal-overlay" id="tool-subs-overlay">
+    <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
+      <div class="modal-header" style="flex-shrink: 0;">
+        <h3>💳 Bills & Subscriptions</h3>
+        <button class="btn-close-modal" id="btn-close-tool-subs">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div style="flex: 1; overflow-y: auto;">
+        <div id="subs-list-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+          <!-- Loaded Dynamically -->
+        </div>
+
+        <!-- Add Subscription Trigger Button -->
+        <button id="btn-toggle-add-sub" class="glass-submit-btn" style="background: var(--apple-blue);">+ Track New Subscription</button>
+        <form id="add-sub-form" style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
+          <div class="form-group">
+            <label for="sub-name-input">Subscription Name</label>
+            <input type="text" id="sub-name-input" class="glass-input" required placeholder="e.g. Netflix Premium">
+          </div>
+          <div class="form-group">
+            <label for="sub-amount-input">Monthly Cost</label>
+            <input type="number" id="sub-amount-input" class="glass-input" required min="1" placeholder="649">
+          </div>
+          <div class="form-group">
+            <label for="sub-date-input">Next Due Date</label>
+            <input type="date" id="sub-date-input" class="glass-input" required>
+          </div>
+          <div class="form-group">
+            <label for="sub-account-select">Charge Account</label>
+            <select id="sub-account-select" class="glass-select">
+              <option value="bank">🏦 Bank Account</option>
+              <option value="card">💳 Credit Card</option>
+              <option value="upi">📱 UPI Wallet</option>
+              <option value="cash">💵 Cash</option>
+            </select>
+          </div>
+          <button type="submit" class="glass-submit-btn" style="margin-top: 6px;">Add Bill Tracker</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Loan & EMI Tool -->
+  <div class="modal-overlay" id="tool-emi-overlay">
+    <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
+      <div class="modal-header" style="flex-shrink: 0;">
+        <h3>💵 Loan & EMI Tracker</h3>
+        <button class="btn-close-modal" id="btn-close-tool-emi">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div style="flex: 1; overflow-y: auto;">
+        <div id="emi-list-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+          <!-- Loaded Dynamically -->
+        </div>
+
+        <!-- Add Loan Button -->
+        <button id="btn-toggle-add-loan" class="glass-submit-btn" style="background: var(--apple-blue);">+ Add New Loan</button>
+        <form id="add-loan-form" style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
+          <div class="form-group">
+            <label for="loan-name-input">Loan Name</label>
+            <input type="text" id="loan-name-input" class="glass-input" required placeholder="e.g. Home Loan HDFC">
+          </div>
+          <div class="form-group">
+            <label for="loan-total-input">Total Loan Dues</label>
+            <input type="number" id="loan-total-input" class="glass-input" required min="1" placeholder="4500000">
+          </div>
+          <div class="form-group">
+            <label for="loan-emi-input">Monthly EMI Payment</label>
+            <input type="number" id="loan-emi-input" class="glass-input" required min="1" placeholder="34500">
+          </div>
+          <div class="form-group">
+            <label for="loan-due-input">EMI Due Date</label>
+            <input type="date" id="loan-due-input" class="glass-input" required>
+          </div>
+          <button type="submit" class="glass-submit-btn" style="margin-top: 6px;">Add Loan</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Investments Tool -->
+  <div class="modal-overlay" id="tool-invest-overlay">
+    <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
+      <div class="modal-header" style="flex-shrink: 0;">
+        <h3>📈 Asset Portfolio</h3>
+        <button class="btn-close-modal" id="btn-close-tool-invest">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
+        <div id="investments-container" style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Loaded Dynamically -->
+        </div>
+
+        <button id="btn-toggle-edit-assets" class="glass-submit-btn" style="background: var(--apple-blue);">Update Asset Values</button>
+        <form id="edit-assets-form" style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
+          <div class="form-group">
+            <label for="asset-stocks-input">Stocks & Equities Value</label>
+            <input type="number" id="asset-stocks-input" class="glass-input" min="0">
+          </div>
+          <div class="form-group">
+            <label for="asset-funds-input">Mutual Funds SIP Value</label>
+            <input type="number" id="asset-funds-input" class="glass-input" min="0">
+          </div>
+          <div class="form-group">
+            <label for="asset-gold-input">Physical Gold Value</label>
+            <input type="number" id="asset-gold-input" class="glass-input" min="0">
+          </div>
+          <div class="form-group">
+            <label for="asset-crypto-input">Cryptocurrency (Manual Entry)</label>
+            <input type="number" id="asset-crypto-input" class="glass-input" min="0">
+          </div>
+          <button type="submit" class="glass-submit-btn" style="margin-top: 6px;">Save Values</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Split Expenses Tool -->
+  <div class="modal-overlay" id="tool-split-overlay">
+    <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
+      <div class="modal-header" style="flex-shrink: 0;">
+        <h3>👨‍👩‍👧 Split Bill Calculator</h3>
+        <button class="btn-close-modal" id="btn-close-tool-split">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div style="flex: 1; overflow-y: auto;">
+        <form id="split-bill-form" onsubmit="return false;" style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="form-group">
+            <label for="split-amount-input">Total Bill Amount</label>
+            <input type="number" id="split-amount-input" class="glass-input" required min="1" step="0.01" placeholder="1500">
+          </div>
+          <div class="form-group">
+            <label for="split-desc-input">Bill Description</label>
+            <input type="text" id="split-desc-input" class="glass-input" required placeholder="e.g. Dinner Outing">
+          </div>
+          <div class="form-group">
+            <label for="split-payer-select">Paid By</label>
+            <select id="split-payer-select" class="glass-select">
+              <!-- Loaded Dynamically -->
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Share Bill With</label>
+            <div id="split-checkboxes-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 120px; overflow-y: auto; padding: 6px; border: 1px solid var(--apple-border); border-radius: var(--border-radius-md); background: var(--apple-bg);">
+              <!-- Checkboxes rendered dynamically -->
+            </div>
+          </div>
+          
+          <button type="submit" class="glass-submit-btn">Record Split Logs</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Challenges & Streaks Tool -->
+  <div class="modal-overlay" id="tool-challenges-overlay">
+    <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
+      <div class="modal-header" style="flex-shrink: 0;">
+        <h3>🏆 Savings Gamification</h3>
+        <button class="btn-close-modal" id="btn-close-tool-challenges">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;" id="challenges-view-content">
+        <!-- Loaded Dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Transfer Funds -->
+  <div class="modal-overlay" id="transfer-funds-overlay">
+    <div class="glass-modal" style="max-height: 75%;">
+      <div class="modal-header">
+        <h3>🔄 Transfer Funds</h3>
+        <button class="btn-close-modal" id="btn-close-transfer-modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="transfer-funds-form" onsubmit="return false;">
+        <div class="form-group">
+          <label for="transfer-from-select">From Account</label>
+          <select id="transfer-from-select" class="glass-select">
+            <option value="cash">💵 Cash</option>
+            <option value="bank" selected>🏦 Bank Account</option>
+            <option value="card">💳 Credit Card</option>
+            <option value="upi">📱 UPI Wallet</option>
+            <option value="savings">💰 Savings Account</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="transfer-to-select">To Account</label>
+          <select id="transfer-to-select" class="glass-select">
+            <option value="cash">💵 Cash</option>
+            <option value="bank">🏦 Bank Account</option>
+            <option value="card">💳 Credit Card</option>
+            <option value="upi">📱 UPI Wallet</option>
+            <option value="savings" selected>💰 Savings Account</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="transfer-amount-input">Amount</label>
+          <input type="number" id="transfer-amount-input" class="glass-input" required min="1" step="0.01" placeholder="1000">
+        </div>
+        <div class="form-group">
+          <label for="transfer-date-input">Date</label>
+          <input type="date" id="transfer-date-input" class="glass-input" required>
+        </div>
+        <button type="submit" class="glass-submit-btn">Execute Transfer</button>
       </form>
     </div>
   </div>

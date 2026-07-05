@@ -1579,3 +1579,102 @@ body.theme-futuristic .radial-progress-circle-bar {
   border-bottom: 1.5px dashed var(--apple-blue) !important;
   background: rgba(0, 122, 255, 0.04) !important;
 }
+
+/* Tool Cards Grid styling */
+.tool-card-btn {
+  background: var(--apple-card) !important;
+  border: 1px solid var(--apple-border) !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.tool-card-btn:hover {
+  border-color: var(--apple-blue) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+}
+.tool-card-btn:active {
+  transform: scale(0.97);
+}
+
+/* Calendar styling */
+.calendar-day-header {
+  font-weight: 700;
+  color: var(--apple-text-secondary);
+  padding: 4px 0;
+  text-transform: uppercase;
+}
+.calendar-day-cell {
+  background: var(--apple-card);
+  border: 1px solid var(--apple-border);
+  border-radius: var(--border-radius-md);
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--apple-text);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  min-height: 40px;
+}
+.calendar-day-cell:hover {
+  background: var(--apple-card-hover);
+  border-color: var(--apple-blue);
+}
+.calendar-day-cell.today {
+  border: 1.5px solid var(--apple-blue);
+}
+.calendar-day-cell.selected {
+  background: var(--apple-blue) !important;
+  color: #ffffff !important;
+  border-color: var(--apple-blue) !important;
+}
+.calendar-day-cell.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+.calendar-indicators {
+  display: flex;
+  gap: 2px;
+  position: absolute;
+  bottom: 2px;
+}
+.dot-inc {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--apple-green);
+}
+.dot-exp {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--apple-red);
+}
+
+/* Subscriptions & EMI Item layout */
+.sub-item-row, .emi-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: var(--border-radius-md);
+  background: var(--apple-card);
+  border: 1px solid var(--apple-border);
+}
+.sub-item-info, .emi-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sub-item-name, .emi-item-name {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--apple-text);
+}
+.sub-item-meta, .emi-item-meta {
+  font-size: 0.65rem;
+  color: var(--apple-text-secondary);
+}
