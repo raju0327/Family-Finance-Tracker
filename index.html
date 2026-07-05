@@ -44,6 +44,11 @@
 
       <!-- Main Scrollable App Views -->
       <main class="app-content">
+        <!-- Pull to Refresh Spinner Indicator -->
+        <div id="pull-to-refresh" style="display: flex; align-items: center; justify-content: center; height: 0; overflow: hidden; transition: height 0.2s ease, opacity 0.2s ease; opacity: 0; font-size: 0.72rem; color: var(--apple-text-secondary); gap: 6px; flex-shrink: 0; margin-bottom: 2px;">
+          <i class="fas fa-sync-alt" id="pull-refresh-icon" style="transition: transform 0.2s ease;"></i>
+          <span id="pull-refresh-text">Pull down to refresh</span>
+        </div>
         
         <!-- ================= DASHBOARD VIEW ================= -->
         <div id="dashboard-view" class="view-panel active">

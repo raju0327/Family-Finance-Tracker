@@ -249,6 +249,7 @@ function init() {
 
   loadData();
   setupEventListeners();
+  setupPullToRefresh();
   
   // Set default form values
   document.getElementById('tx-date-input').value = new Date().toISOString().split('T')[0];
@@ -1878,6 +1879,8 @@ function openAccountDetails(accId) {
 }
 
 // --- MOBILE OVERLAY HELPERS (History popstate triggers) ---
+let isProgrammaticClose = false;
+
 function openOverlay(el) {
   if (!el) return;
   el.classList.add('active');
@@ -1888,15 +1891,22 @@ function closeOverlay(el) {
   if (!el) return;
   el.classList.remove('active');
   if (history.state && history.state.modalOpen) {
+    isProgrammaticClose = true;
     history.back();
   }
 }
 
 // Global browser popstate listener for back button interception
 window.addEventListener('popstate', (e) => {
-  const activeOverlay = document.querySelector('.modal-overlay.active, .settings-drawer.active');
-  if (activeOverlay) {
-    activeOverlay.classList.remove('active');
+  if (isProgrammaticClose) {
+    isProgrammaticClose = false;
+    return;
+  }
+  
+  const activeOverlays = Array.from(document.querySelectorAll('.modal-overlay.active, .settings-drawer.active'));
+  if (activeOverlays.length > 0) {
+    const topOverlay = activeOverlays[activeOverlays.length - 1];
+    topOverlay.classList.remove('active');
   }
 });
 
@@ -2839,6 +2849,80 @@ function renderAccountsHub() {
       </div>
     `;
   }).join('');
+}
+
+function setupPullToRefresh() {
+  const content = document.querySelector('.app-content');
+  const ptr = document.getElementById('pull-to-refresh');
+  const icon = document.getElementById('pull-refresh-icon');
+  const text = document.getElementById('pull-refresh-text');
+  
+  if (!content || !ptr || !icon || !text) return;
+  
+  let startY = 0;
+  let pulling = false;
+  
+  content.addEventListener('touchstart', (e) => {
+    if (content.scrollTop === 0) {
+      startY = e.touches[0].pageY;
+      pulling = true;
+    } else {
+      pulling = false;
+    }
+  });
+  
+  content.addEventListener('touchmove', (e) => {
+    if (!pulling) return;
+    const currentY = e.touches[0].pageY;
+    const diff = currentY - startY;
+    
+    if (diff > 0) {
+      // Pulling down
+      e.preventDefault();
+      const pullHeight = Math.min(diff * 0.4, 60);
+      ptr.style.height = `${pullHeight}px`;
+      ptr.style.opacity = `${pullHeight / 60}`;
+      
+      if (pullHeight >= 50) {
+        text.innerText = "Release to refresh";
+        icon.style.transform = "rotate(180deg)";
+      } else {
+        text.innerText = "Pull down to refresh";
+        icon.style.transform = "rotate(0deg)";
+      }
+    }
+  }, { passive: false });
+  
+  content.addEventListener('touchend', async () => {
+    if (!pulling) return;
+    pulling = false;
+    
+    const currentHeight = parseInt(ptr.style.height) || 0;
+    if (currentHeight >= 50) {
+      ptr.style.height = '40px';
+      text.innerText = "Syncing with Sheets...";
+      icon.classList.add('syncing-spin');
+      
+      if (googleSheetSyncEnabled && googleSheetUrl) {
+        await syncFromGoogleSheets();
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        renderAll();
+        showToast("Local data reloaded.");
+      }
+      
+      text.innerText = "Updated successfully";
+      icon.classList.remove('syncing-spin');
+      icon.style.transform = "rotate(0deg)";
+      setTimeout(() => {
+        ptr.style.height = '0';
+        ptr.style.opacity = '0';
+      }, 800);
+    } else {
+      ptr.style.height = '0';
+      ptr.style.opacity = '0';
+    }
+  });
 }
 
 // Intercept boot check
