@@ -272,9 +272,9 @@ function doGet(e) {
       var sheet = sheets[s];
       var sheetName = sheet.getName();
       
-      // Skip the default Sheet1 if empty, and skip special database tables
-      if (sheetName === "Sheet1" && sheet.getLastRow() <= 1) continue;
-      if (["Budgets", "Goals", "Subscriptions", "Loans", "Investments", "Categories"].indexOf(sheetName) !== -1) continue;
+      // Skip the default Sheet1 or Finance Tracker if empty, and skip special database tables
+      if ((sheetName === "Sheet1" || sheetName === "Finance Tracker") && sheet.getLastRow() <= 1) continue;
+      if (["Budgets", "Goals", "Subscriptions", "Loans", "Investments", "Categories", "Finance Tracker"].indexOf(sheetName) !== -1) continue;
       
       // Each sheet tab represents a profile!
       profiles.push({
@@ -337,8 +337,7 @@ function getAvatarForProfile(index, name) {
   var avatars = ["👤", "👨", "👩", "👦", "👧", "👶"];
   return avatars[index % avatars.length];
 }
-`;[index % avatars.length];
-}`;
+`;
 
 // --- STATE MANAGEMENT ---
 let transactions = [];
