@@ -1320,27 +1320,27 @@ async function syncFromGoogleSheets() {
       }
 
       // Load Budgets from Sheet
-      if (result.budgets && Object.keys(result.budgets).length > 0) {
+      if (result.budgets) {
         budgets = result.budgets;
       }
       
       // Load Goals from Sheet
-      if (result.goals && result.goals.length > 0) {
+      if (result.goals) {
         goals = result.goals;
       }
       
       // Load Subscriptions from Sheet
-      if (result.subscriptions && result.subscriptions.length > 0) {
+      if (result.subscriptions) {
         subscriptions = result.subscriptions;
       }
       
       // Load Loans from Sheet
-      if (result.loans && result.loans.length > 0) {
+      if (result.loans) {
         loans = result.loans;
       }
       
       // Load Investments from Sheet
-      if (result.investments && Object.keys(result.investments).length > 0) {
+      if (result.investments) {
         investments = result.investments;
       }
       
