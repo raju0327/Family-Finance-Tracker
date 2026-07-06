@@ -212,7 +212,7 @@ function doGet(e) {
               id: sData[i][0],
               name: sData[i][1],
               amount: parseFloat(sData[i][2]),
-              dueDate: Utilities.formatDate(new Date(sData[i][3]), Session.getScriptTimeZone(), "yyyy-MM-dd"),
+              dueDate: safeFormatDate(sData[i][3], Session.getScriptTimeZone()),
               account: sData[i][4]
             });
           }
@@ -231,7 +231,7 @@ function doGet(e) {
               name: lData[i][1],
               total: parseFloat(lData[i][2]),
               emi: parseFloat(lData[i][3]),
-              dueDate: Utilities.formatDate(new Date(lData[i][4]), Session.getScriptTimeZone(), "yyyy-MM-dd")
+              dueDate: safeFormatDate(lData[i][4], Session.getScriptTimeZone())
             });
           }
         }
@@ -295,7 +295,7 @@ function doGet(e) {
           
           allTransactions.push({
             id: row[0],
-            date: Utilities.formatDate(new Date(row[1]), Session.getScriptTimeZone(), "yyyy-MM-dd"),
+            date: safeFormatDate(row[1], Session.getScriptTimeZone()),
             categoryName: row[2],
             description: row[3],
             type: row[4],
@@ -336,6 +336,17 @@ function getAvatarForProfile(index, name) {
   if (lower.indexOf("kid") !== -1 || lower.indexOf("zoe") !== -1) return "👧";
   var avatars = ["👤", "👨", "👩", "👦", "👧", "👶"];
   return avatars[index % avatars.length];
+}
+
+function safeFormatDate(val, tz) {
+  if (!val) return "";
+  try {
+    var d = new Date(val);
+    if (isNaN(d.getTime())) return "";
+    return Utilities.formatDate(d, tz || "GMT", "yyyy-MM-dd");
+  } catch(e) {
+    return "";
+  }
 }
 `;
 
