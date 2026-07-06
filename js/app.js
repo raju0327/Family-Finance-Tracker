@@ -2179,6 +2179,54 @@ function setupEventListeners() {
       catBudgetGroup.style.display = (catTypeSelect.value === 'income') ? 'none' : 'block';
     });
   }
+
+  // Pay EMI Modal Form Submit Listener
+  const payEmiForm = document.getElementById('pay-emi-form');
+  if (payEmiForm) {
+    payEmiForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('pay-emi-loan-id').value;
+      const loan = loans.find(l => l.id === id);
+      if (!loan) return;
+      
+      const payAmt = parseFloat(document.getElementById('pay-emi-amount-input').value);
+      if (isNaN(payAmt) || payAmt <= 0) {
+        showToast("Please enter a valid positive payment amount.");
+        return;
+      }
+      
+      const actualPayment = Math.min(payAmt, loan.total);
+
+      const newTx = {
+        id: 'tx-' + Date.now(),
+        type: 'expense',
+        memberId: selectedMemberId === 'all' ? members[0].id : selectedMemberId,
+        categoryId: 'emi',
+        amount: actualPayment,
+        date: new Date().toISOString().split('T')[0],
+        description: `EMI Payment: ${loan.name}`,
+        account: 'bank'
+      };
+
+      transactions.push(newTx);
+      loan.total -= actualPayment;
+      
+      const d = new Date(loan.dueDate);
+      d.setMonth(d.getMonth() + 1);
+      loan.dueDate = d.toISOString().split('T')[0];
+
+      saveToStorage();
+      
+      // Sync both the transaction and updated loan row to Google Sheets
+      syncTransactionToGoogleSheet('add', newTx);
+      syncFeatureToGoogleSheet('payLoan', { id: loan.id, total: loan.total, dueDate: loan.dueDate });
+
+      closeOverlay(document.getElementById('pay-emi-overlay'));
+      renderAll();
+      renderLoans();
+      showToast(`Paid EMI of ${currencySymbol}${actualPayment} for ${loan.name}!`);
+    });
+  }
 }
 
 // --- UTILS ---
@@ -2641,6 +2689,9 @@ function setupHubListeners() {
   };
   document.getElementById('btn-close-tool-emi').onclick = () => {
     closeOverlay(document.getElementById('tool-emi-overlay'));
+  };
+  document.getElementById('btn-close-pay-emi').onclick = () => {
+    closeOverlay(document.getElementById('pay-emi-overlay'));
   };
   document.getElementById('btn-close-tool-invest').onclick = () => {
     closeOverlay(document.getElementById('tool-invest-overlay'));
@@ -3125,44 +3176,17 @@ function payEMI(id) {
   if (!loan) return;
 
   const defaultEmi = Math.min(loan.emi, loan.total);
-  const inputVal = prompt(`Enter EMI payment amount for ${loan.name}:`, defaultEmi);
-  if (inputVal === null) return; // User cancelled
   
-  const payAmt = parseFloat(inputVal);
-  if (isNaN(payAmt) || payAmt <= 0) {
-    showToast("Please enter a valid positive payment amount.");
-    return;
-  }
-
-  const actualPayment = Math.min(payAmt, loan.total);
-
-  const newTx = {
-    id: 'tx-' + Date.now(),
-    type: 'expense',
-    memberId: selectedMemberId === 'all' ? members[0].id : selectedMemberId,
-    categoryId: 'emi',
-    amount: actualPayment,
-    date: new Date().toISOString().split('T')[0],
-    description: `EMI Payment: ${loan.name}`,
-    account: 'bank'
-  };
-
-  transactions.push(newTx);
-  loan.total -= actualPayment;
+  // Populate custom modal inputs
+  document.getElementById('pay-emi-loan-id').value = id;
+  const amtInput = document.getElementById('pay-emi-amount-input');
+  amtInput.value = defaultEmi;
+  amtInput.max = loan.total;
   
-  const d = new Date(loan.dueDate);
-  d.setMonth(d.getMonth() + 1);
-  loan.dueDate = d.toISOString().split('T')[0];
-
-  saveToStorage();
+  document.getElementById('pay-emi-help-text').innerText = `Maximum payable remaining balance: ${currencySymbol}${loan.total.toLocaleString()}`;
   
-  // Sync both the transaction and updated loan row to Google Sheets
-  syncTransactionToGoogleSheet('add', newTx);
-  syncFeatureToGoogleSheet('payLoan', { id: loan.id, total: loan.total, dueDate: loan.dueDate });
-
-  renderAll();
-  renderLoans();
-  showToast(`Paid EMI of ${currencySymbol}${actualPayment} for ${loan.name}!`);
+  // Open custom modal overlay
+  openOverlay(document.getElementById('pay-emi-overlay'));
 }
 
 function deleteLoan(id) {
