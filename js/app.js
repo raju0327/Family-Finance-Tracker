@@ -74,17 +74,56 @@ function doPost(e) {
                            .setMimeType(ContentService.MimeType.JSON);
     }
     
-    // ACTION: Save Loans Table
-    if (action === "saveLoans") {
+    // ACTION: Add Loan
+    if (action === "addLoan") {
       var sheet = ss.getSheetByName("Loan & EMI Tracker") || ss.insertSheet("Loan & EMI Tracker");
-      sheet.clear();
-      sheet.appendRow(["Loan ID", "Name", "Total", "EMI", "Due Date"]);
-      var loansData = payload.data;
-      for (var i = 0; i < loansData.length; i++) {
-        var l = loansData[i];
-        sheet.appendRow([l.id, l.name, l.total, l.emi, l.dueDate]);
+      if (sheet.getLastRow() === 0) {
+        sheet.appendRow(["Loan ID", "Name", "Total", "EMI", "Due Date"]);
       }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Loans saved"}))
+      var l = payload.data;
+      sheet.appendRow([l.id, l.name, l.total, l.emi, l.dueDate]);
+      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Loan added"}))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // ACTION: Delete Loan
+    if (action === "deleteLoan") {
+      var sheet = ss.getSheetByName("Loan & EMI Tracker");
+      if (sheet) {
+        var data = sheet.getDataRange().getValues();
+        var deleted = false;
+        for (var i = 1; i < data.length; i++) {
+          if (data[i][0] === payload.data.id) {
+            sheet.deleteRow(i + 1);
+            deleted = true;
+            break;
+          }
+        }
+        return ContentService.createTextOutput(JSON.stringify({status: "success", message: deleted ? "Loan row deleted" : "Loan row not found"}))
+                             .setMimeType(ContentService.MimeType.JSON);
+      }
+      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Loan sheet not found"}))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // ACTION: Update Loan (on EMI Payment)
+    if (action === "payLoan") {
+      var sheet = ss.getSheetByName("Loan & EMI Tracker");
+      if (sheet) {
+        var data = sheet.getDataRange().getValues();
+        var updated = false;
+        for (var i = 1; i < data.length; i++) {
+          if (data[i][0] === payload.data.id) {
+            sheet.getRange(i + 1, 3).setValue(payload.data.total);
+            sheet.getRange(i + 1, 5).setValue(payload.data.dueDate);
+            updated = true;
+            break;
+          }
+        }
+        return ContentService.createTextOutput(JSON.stringify({status: "success", message: updated ? "Loan balance updated" : "Loan row not found"}))
+                             .setMimeType(ContentService.MimeType.JSON);
+      }
+      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Loan sheet not found"}))
                            .setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -2733,7 +2772,7 @@ function setupHubListeners() {
       };
       loans.push(newLoan);
       saveToStorage();
-      syncFeatureToGoogleSheet('saveLoans', loans);
+      syncFeatureToGoogleSheet('addLoan', newLoan);
       renderAll();
       addLoanForm.reset();
       addLoanForm.style.display = 'none';
@@ -3083,9 +3122,9 @@ function payEMI(id) {
 
   saveToStorage();
   
-  // Sync both the transaction and updated loans table to Google Sheets
+  // Sync both the transaction and updated loan row to Google Sheets
   syncTransactionToGoogleSheet('add', newTx);
-  syncFeatureToGoogleSheet('saveLoans', loans);
+  syncFeatureToGoogleSheet('payLoan', { id: loan.id, total: loan.total, dueDate: loan.dueDate });
 
   renderAll();
   renderLoans();
@@ -3096,7 +3135,7 @@ function deleteLoan(id) {
   if (confirm("Remove this loan from tracking?")) {
     loans = loans.filter(l => l.id !== id);
     saveToStorage();
-    syncFeatureToGoogleSheet('saveLoans', loans);
+    syncFeatureToGoogleSheet('deleteLoan', { id: id });
     renderLoans();
     showToast("Loan tracker deleted.");
   }
