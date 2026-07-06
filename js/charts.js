@@ -27,11 +27,13 @@ window.Charts = {
     } else {
       activeSegments.forEach(seg => {
         const percentage = (seg.value / total) * 100;
+        const budgetPct = seg.limit > 0 ? (seg.value / seg.limit) * 100 : 0;
+        const pctText = seg.limit > 0 ? `${budgetPct.toFixed(0)}% used` : `${percentage.toFixed(0)}% share`;
         spectrumHtml += `
           <div class="spectrum-segment" 
                data-cat-id="${seg.id}"
                style="width: ${percentage}%; background: ${seg.color}; height: 100%;" 
-               title="${seg.label}: ${currencySymbol}${seg.value.toFixed(2)} (${percentage.toFixed(0)}%)"></div>
+               title="${seg.label}: ${currencySymbol}${seg.value.toFixed(2)} (${pctText})"></div>
         `;
       });
     }
@@ -66,7 +68,6 @@ window.Charts = {
               <span style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--apple-text);">
                 <span style="width: 8px; height: 8px; border-radius: 50%; background: ${seg.color}; display: inline-block;"></span>
                 ${seg.label}
-                <span style="font-size: 0.62rem; font-weight: 500; color: var(--apple-text-secondary); margin-left: 2px;">(${sharePercentage.toFixed(0)}% share)</span>
               </span>
               <span style="font-weight: 700; color: var(--apple-text-secondary);">
                 ${currencySymbol}${seg.value.toLocaleString(undefined, {maximumFractionDigits:0})} 
@@ -90,7 +91,6 @@ window.Charts = {
               <span style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--apple-text);">
                 <span style="width: 8px; height: 8px; border-radius: 50%; background: ${seg.color || '#ccc'}; display: inline-block;"></span>
                 ${seg.label}
-                <span style="font-size: 0.62rem; font-weight: 500; color: var(--apple-text-secondary); margin-left: 2px;">(0% share)</span>
               </span>
               <span style="font-weight: 600; color: var(--apple-text-secondary);">
                 ${currencySymbol}0 

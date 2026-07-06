@@ -33,6 +33,88 @@ function doPost(e) {
                            .setMimeType(ContentService.MimeType.JSON);
     }
     
+    // ACTION: Save Budgets Table
+    if (action === "saveBudgets") {
+      var sheet = ss.getSheetByName("Budgets") || ss.insertSheet("Budgets");
+      sheet.clear();
+      sheet.appendRow(["Category ID", "Limit"]);
+      var budgetsData = payload.data;
+      for (var k in budgetsData) {
+        sheet.appendRow([k, budgetsData[k]]);
+      }
+      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Budgets saved"}))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // ACTION: Save Goals Table
+    if (action === "saveGoals") {
+      var sheet = ss.getSheetByName("Goals") || ss.insertSheet("Goals");
+      sheet.clear();
+      sheet.appendRow(["Goal ID", "Name", "Target", "Current", "Color"]);
+      var goalsData = payload.data;
+      for (var i = 0; i < goalsData.length; i++) {
+        var g = goalsData[i];
+        sheet.appendRow([g.id, g.name, g.target, g.current, g.color]);
+      }
+      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Goals saved"}))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // ACTION: Save Subscriptions Table
+    if (action === "saveSubscriptions") {
+      var sheet = ss.getSheetByName("Subscriptions") || ss.insertSheet("Subscriptions");
+      sheet.clear();
+      sheet.appendRow(["Subscription ID", "Name", "Amount", "Due Date", "Account"]);
+      var subsData = payload.data;
+      for (var i = 0; i < subsData.length; i++) {
+        var s = subsData[i];
+        sheet.appendRow([s.id, s.name, s.amount, s.dueDate, s.account]);
+      }
+      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Subscriptions saved"}))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // ACTION: Save Loans Table
+    if (action === "saveLoans") {
+      var sheet = ss.getSheetByName("Loans") || ss.insertSheet("Loans");
+      sheet.clear();
+      sheet.appendRow(["Loan ID", "Name", "Total", "EMI", "Due Date"]);
+      var loansData = payload.data;
+      for (var i = 0; i < loansData.length; i++) {
+        var l = loansData[i];
+        sheet.appendRow([l.id, l.name, l.total, l.emi, l.dueDate]);
+      }
+      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Loans saved"}))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // ACTION: Save Investments Table
+    if (action === "saveInvestments") {
+      var sheet = ss.getSheetByName("Investments") || ss.insertSheet("Investments");
+      sheet.clear();
+      sheet.appendRow(["Asset Class", "Amount"]);
+      var investData = payload.data;
+      for (var k in investData) {
+        sheet.appendRow([k, investData[k]]);
+      }
+      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Investments saved"}))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // ACTION: Save Categories Table
+    if (action === "saveCategories") {
+      var sheet = ss.getSheetByName("Categories") || ss.insertSheet("Categories");
+      sheet.clear();
+      sheet.appendRow(["Category ID", "Name", "Icon", "Color", "Type"]);
+      var catData = payload.data;
+      for (var k in catData) {
+        var c = catData[k];
+        sheet.appendRow([k, c.name, c.icon, c.color, c.type]);
+      }
+      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Categories saved"}))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+    
     // TRANSACTION ACTIONS (Require specific member sheet tab)
     var tx = payload.data;
     var memberSheetName = tx.memberName || tx.memberId;
@@ -69,7 +151,7 @@ function doPost(e) {
     }
     
     return ContentService.createTextOutput(JSON.stringify({status: "error", message: "Invalid action"}))
-                         .setMimeType(ContentService.MimeType.JSON);
+                          .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()}))
                          .setMimeType(ContentService.MimeType.JSON);
@@ -84,13 +166,115 @@ function doGet(e) {
     
     var profiles = [];
     var allTransactions = [];
+    var budgets = {};
+    var goals = [];
+    var subscriptions = [];
+    var loans = [];
+    var investments = {};
+    var categories = {};
     
+    // 1. Fetch special database sheets explicitly
+    var budgetsSheet = ss.getSheetByName("Budgets");
+    if (budgetsSheet) {
+      var bData = budgetsSheet.getDataRange().getValues();
+      if (bData.length > 1) {
+        for (var i = 1; i < bData.length; i++) {
+          if (bData[i][0]) budgets[bData[i][0]] = parseFloat(bData[i][1]);
+        }
+      }
+    }
+    
+    var goalsSheet = ss.getSheetByName("Goals");
+    if (goalsSheet) {
+      var gData = goalsSheet.getDataRange().getValues();
+      if (gData.length > 1) {
+        for (var i = 1; i < gData.length; i++) {
+          if (gData[i][0]) {
+            goals.push({
+              id: gData[i][0],
+              name: gData[i][1],
+              target: parseFloat(gData[i][2]),
+              current: parseFloat(gData[i][3]),
+              color: gData[i][4]
+            });
+          }
+        }
+      }
+    }
+
+    var subsSheet = ss.getSheetByName("Subscriptions");
+    if (subsSheet) {
+      var sData = subsSheet.getDataRange().getValues();
+      if (sData.length > 1) {
+        for (var i = 1; i < sData.length; i++) {
+          if (sData[i][0]) {
+            subscriptions.push({
+              id: sData[i][0],
+              name: sData[i][1],
+              amount: parseFloat(sData[i][2]),
+              dueDate: Utilities.formatDate(new Date(sData[i][3]), Session.getScriptTimeZone(), "yyyy-MM-dd"),
+              account: sData[i][4]
+            });
+          }
+        }
+      }
+    }
+
+    var loansSheet = ss.getSheetByName("Loans");
+    if (loansSheet) {
+      var lData = loansSheet.getDataRange().getValues();
+      if (lData.length > 1) {
+        for (var i = 1; i < lData.length; i++) {
+          if (lData[i][0]) {
+            loans.push({
+              id: lData[i][0],
+              name: lData[i][1],
+              total: parseFloat(lData[i][2]),
+              emi: parseFloat(lData[i][3]),
+              dueDate: Utilities.formatDate(new Date(lData[i][4]), Session.getScriptTimeZone(), "yyyy-MM-dd")
+            });
+          }
+        }
+      }
+    }
+
+    var investSheet = ss.getSheetByName("Investments");
+    if (investSheet) {
+      var invData = investSheet.getDataRange().getValues();
+      if (invData.length > 1) {
+        for (var i = 1; i < invData.length; i++) {
+          if (invData[i][0]) {
+            investments[invData[i][0]] = parseFloat(invData[i][1]);
+          }
+        }
+      }
+    }
+
+    var catSheet = ss.getSheetByName("Categories");
+    if (catSheet) {
+      var catData = catSheet.getDataRange().getValues();
+      if (catData.length > 1) {
+        for (var i = 1; i < catData.length; i++) {
+          if (catData[i][0]) {
+            categories[catData[i][0]] = {
+              name: catData[i][1],
+              icon: catData[i][2],
+              color: catData[i][3],
+              type: catData[i][4]
+            };
+          }
+        }
+      }
+    }
+    
+    // 2. Fetch profile member transaction tabs
     for (var s = 0; s < sheets.length; s++) {
       var sheet = sheets[s];
       var sheetName = sheet.getName();
       
-      // Skip the default Sheet1 if empty
+      // Skip the default Sheet1 if empty, and skip special database tables
       if (sheetName === "Sheet1" && sheet.getLastRow() <= 1) continue;
+      if (["Budgets", "Goals", "Subscriptions", "Loans", "Investments", "Categories"].indexOf(sheetName) !== -1) continue;
       
       // Each sheet tab represents a profile!
       profiles.push({
@@ -125,7 +309,13 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify({
       status: "success", 
       profiles: profiles, 
-      transactions: allTransactions
+      transactions: allTransactions,
+      budgets: budgets,
+      goals: goals,
+      subscriptions: subscriptions,
+      loans: loans,
+      investments: investments,
+      categories: categories
     })).setMimeType(ContentService.MimeType.JSON);
   } catch(err) {
     return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()}))
@@ -146,6 +336,8 @@ function getAvatarForProfile(index, name) {
   if (lower.indexOf("kid") !== -1 || lower.indexOf("zoe") !== -1) return "👧";
   var avatars = ["👤", "👨", "👩", "👦", "👧", "👶"];
   return avatars[index % avatars.length];
+}
+`;[index % avatars.length];
 }`;
 
 // --- STATE MANAGEMENT ---
@@ -843,6 +1035,7 @@ function renderBudgets() {
       if (!isNaN(val) && val >= 0) {
         budgets[catId] = val;
         saveToStorage();
+        syncFeatureToGoogleSheet('saveBudgets', budgets);
         renderAll();
         showToast(`Budget for ${categories[catId].name} updated to ${currencySymbol}${val}.`);
       }
@@ -940,6 +1133,7 @@ function renderGoals() {
       if (g && confirm(`Delete savings goal "${g.name}"?`)) {
         goals = goals.filter(x => x.id !== id);
         saveToStorage();
+        syncFeatureToGoogleSheet('saveGoals', goals);
         renderAll();
         showToast(`Goal "${g.name}" deleted.`);
       }
@@ -1105,6 +1299,7 @@ function populateFormDropdowns() {
 // --- GOOGLE SHEETS NETWORK SYNC ---
 
 // Fetches all sheets and synchronizes state locally (Only sheets records reflect)
+// Fetches all sheets and synchronizes state locally (Only sheets records reflect)
 async function syncFromGoogleSheets() {
   if (!googleSheetSyncEnabled || !googleSheetUrl) return;
   
@@ -1123,6 +1318,36 @@ async function syncFromGoogleSheets() {
       } else {
         // Fallback default if sheet is completely empty
         members = [{ id: 'operator', name: 'Primary Member', role: 'Head of Family', avatar: '👨', color: '#007aff', glow: 'rgba(0, 122, 255, 0.15)' }];
+      }
+
+      // Load Budgets from Sheet
+      if (result.budgets && Object.keys(result.budgets).length > 0) {
+        budgets = result.budgets;
+      }
+      
+      // Load Goals from Sheet
+      if (result.goals && result.goals.length > 0) {
+        goals = result.goals;
+      }
+      
+      // Load Subscriptions from Sheet
+      if (result.subscriptions && result.subscriptions.length > 0) {
+        subscriptions = result.subscriptions;
+      }
+      
+      // Load Loans from Sheet
+      if (result.loans && result.loans.length > 0) {
+        loans = result.loans;
+      }
+      
+      // Load Investments from Sheet
+      if (result.investments && Object.keys(result.investments).length > 0) {
+        investments = result.investments;
+      }
+      
+      // Load Categories from Sheet
+      if (result.categories && Object.keys(result.categories).length > 0) {
+        categories = { ...window.CATEGORIES, ...result.categories };
       }
 
       // 2. Parse Transactions
@@ -1180,6 +1405,33 @@ async function syncFromGoogleSheets() {
     showToast("Fetch failed. Using local cache.");
   } finally {
     if (syncBtnIcon) syncBtnIcon.classList.remove('syncing-spin');
+  }
+}
+
+// Syncs custom tables and Feature Hub data to Google Sheets
+async function syncFeatureToGoogleSheet(action, data) {
+  if (!googleSheetSyncEnabled || !googleSheetUrl) return;
+  
+  const payload = {
+    action: action,
+    data: data
+  };
+  
+  showToast(`Syncing database...`);
+  
+  try {
+    await fetch(googleSheetUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    showToast("Database updated successfully.");
+  } catch (err) {
+    console.error("Database sync error: ", err);
+    showToast("Connection Sync Pipeline Error.");
   }
 }
 
@@ -1540,8 +1792,9 @@ function setupEventListeners() {
       transactions.push(newTx);
       saveToStorage();
       
-      // Sync transaction addition to Google Sheets
+      // Sync transaction addition and updated goals table to Google Sheets
       syncTransactionToGoogleSheet('add', newTx);
+      syncFeatureToGoogleSheet('saveGoals', goals);
       
       renderAll();
       
@@ -1670,6 +1923,10 @@ function setupEventListeners() {
     }
     
     saveToStorage();
+    syncFeatureToGoogleSheet('saveCategories', categories);
+    if (type === 'expense') {
+      syncFeatureToGoogleSheet('saveBudgets', budgets);
+    }
     populateFormDropdowns();
     renderAll();
     
@@ -1833,6 +2090,7 @@ function setupEventListeners() {
         g.color = document.getElementById('edit-goal-color-select').value;
         
         saveToStorage();
+        syncFeatureToGoogleSheet('saveGoals', goals);
         renderAll();
         closeOverlay(editGoalOverlay);
         showToast(`Goal "${g.name}" updated.`);
@@ -2415,6 +2673,7 @@ function setupHubListeners() {
       };
       goals.push(newGoal);
       saveToStorage();
+      syncFeatureToGoogleSheet('saveGoals', goals);
       renderAll();
       addGoalForm.reset();
       addGoalForm.style.display = 'none';
@@ -2441,6 +2700,7 @@ function setupHubListeners() {
       };
       subscriptions.push(newSub);
       saveToStorage();
+      syncFeatureToGoogleSheet('saveSubscriptions', subscriptions);
       renderAll();
       addSubForm.reset();
       addSubForm.style.display = 'none';
@@ -2467,6 +2727,7 @@ function setupHubListeners() {
       };
       loans.push(newLoan);
       saveToStorage();
+      syncFeatureToGoogleSheet('saveLoans', loans);
       renderAll();
       addLoanForm.reset();
       addLoanForm.style.display = 'none';
@@ -2485,6 +2746,7 @@ function setupHubListeners() {
       investments.crypto = parseFloat(document.getElementById('asset-crypto-input').value) || 0;
       
       saveToStorage();
+      syncFeatureToGoogleSheet('saveInvestments', investments);
       renderAll();
       editAssetsForm.reset();
       editAssetsForm.style.display = 'none';
@@ -2730,6 +2992,11 @@ function paySubscription(id) {
   sub.dueDate = d.toISOString().split('T')[0];
 
   saveToStorage();
+  
+  // Sync bill payment transaction and subscription renewal to Google Sheets
+  syncTransactionToGoogleSheet('add', newTx);
+  syncFeatureToGoogleSheet('saveSubscriptions', subscriptions);
+
   renderAll();
   renderSubscriptions();
   showToast(`Paid subscription ${sub.name}!`);
@@ -2739,6 +3006,7 @@ function deleteSubscription(id) {
   if (confirm("Stop tracking this subscription?")) {
     subscriptions = subscriptions.filter(s => s.id !== id);
     saveToStorage();
+    syncFeatureToGoogleSheet('saveSubscriptions', subscriptions);
     renderSubscriptions();
     showToast("Subscription deleted.");
   }
@@ -2777,38 +3045,52 @@ function payEMI(id) {
   const loan = loans.find(l => l.id === id);
   if (!loan) return;
 
-  if (loan.total < loan.emi) {
-    loan.emi = loan.total;
+  const defaultEmi = Math.min(loan.emi, loan.total);
+  const inputVal = prompt(`Enter EMI payment amount for ${loan.name}:`, defaultEmi);
+  if (inputVal === null) return; // User cancelled
+  
+  const payAmt = parseFloat(inputVal);
+  if (isNaN(payAmt) || payAmt <= 0) {
+    showToast("Please enter a valid positive payment amount.");
+    return;
   }
+
+  const actualPayment = Math.min(payAmt, loan.total);
 
   const newTx = {
     id: 'tx-' + Date.now(),
     type: 'expense',
     memberId: selectedMemberId === 'all' ? members[0].id : selectedMemberId,
     categoryId: 'emi',
-    amount: loan.emi,
+    amount: actualPayment,
     date: new Date().toISOString().split('T')[0],
     description: `EMI Payment: ${loan.name}`,
     account: 'bank'
   };
 
   transactions.push(newTx);
-  loan.total -= loan.emi;
+  loan.total -= actualPayment;
   
   const d = new Date(loan.dueDate);
   d.setMonth(d.getMonth() + 1);
   loan.dueDate = d.toISOString().split('T')[0];
 
   saveToStorage();
+  
+  // Sync both the transaction and updated loans table to Google Sheets
+  syncTransactionToGoogleSheet('add', newTx);
+  syncFeatureToGoogleSheet('saveLoans', loans);
+
   renderAll();
   renderLoans();
-  showToast(`Paid EMI of ${currencySymbol}${loan.emi} for ${loan.name}!`);
+  showToast(`Paid EMI of ${currencySymbol}${actualPayment} for ${loan.name}!`);
 }
 
 function deleteLoan(id) {
   if (confirm("Remove this loan from tracking?")) {
     loans = loans.filter(l => l.id !== id);
     saveToStorage();
+    syncFeatureToGoogleSheet('saveLoans', loans);
     renderLoans();
     showToast("Loan tracker deleted.");
   }
