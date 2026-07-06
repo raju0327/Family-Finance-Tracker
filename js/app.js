@@ -1307,7 +1307,7 @@ async function syncFromGoogleSheets() {
     if (result.status === 'success') {
       // 1. Parse Profiles (Members) dynamically from Sheet Tab Names!
       if (result.profiles && result.profiles.length > 0) {
-        members = result.profiles.filter(p => p.name && ["budgets", "goals", "subscriptions", "loans", "investments", "categories", "finance tracker"].indexOf(p.name.toLowerCase()) === -1);
+        members = result.profiles.filter(p => p.name && typeof p.name === 'string' && ["budgets", "savings goals", "subscriptions", "loan & emi tracker", "investments", "categories", "finance tracker"].indexOf(p.name.toLowerCase()) === -1);
       } else {
         // Fallback default if sheet is completely empty
         members = [{ id: 'operator', name: 'Primary Member', role: 'Head of Family', avatar: '👨', color: '#007aff', glow: 'rgba(0, 122, 255, 0.15)' }];
