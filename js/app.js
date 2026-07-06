@@ -2669,13 +2669,38 @@ function setupHubListeners() {
     document.getElementById('btn-toggle-add-sub').innerText = isHidden ? '- Hide Form' : '+ Track New Subscription';
     document.getElementById('sub-date-input').value = new Date().toISOString().split('T')[0];
   };
-  document.getElementById('btn-toggle-add-loan').onclick = () => {
-    const form = document.getElementById('add-loan-form');
-    const isHidden = form.style.display === 'none';
-    form.style.display = isHidden ? 'flex' : 'none';
-    document.getElementById('btn-toggle-add-loan').innerText = isHidden ? '- Hide Form' : '+ Add New Loan';
-    document.getElementById('loan-due-input').value = new Date().toISOString().split('T')[0];
-  };
+  // Loan & EMI Modal Tab Switchers
+  const btnTabOngoing = document.getElementById('btn-tab-ongoing-loans');
+  const btnTabEntry = document.getElementById('btn-tab-entry-loan');
+  const viewOngoing = document.getElementById('view-ongoing-loans');
+  const viewEntry = document.getElementById('view-entry-loan');
+
+  if (btnTabOngoing && btnTabEntry && viewOngoing && viewEntry) {
+    const setTabActive = (activeBtn, inactiveBtn) => {
+      activeBtn.style.background = 'var(--apple-blue)';
+      activeBtn.style.color = 'white';
+      activeBtn.style.border = 'none';
+      inactiveBtn.style.background = 'var(--apple-border)';
+      inactiveBtn.style.color = 'var(--apple-text-secondary)';
+      inactiveBtn.style.border = 'none';
+    };
+
+    btnTabOngoing.onclick = () => {
+      viewOngoing.style.display = 'block';
+      viewEntry.style.display = 'none';
+      setTabActive(btnTabOngoing, btnTabEntry);
+    };
+
+    btnTabEntry.onclick = () => {
+      viewOngoing.style.display = 'none';
+      viewEntry.style.display = 'block';
+      setTabActive(btnTabEntry, btnTabOngoing);
+      document.getElementById('loan-due-input').value = new Date().toISOString().split('T')[0];
+    };
+
+    // Set initial tab styling
+    setTabActive(btnTabOngoing, btnTabEntry);
+  }
   document.getElementById('btn-toggle-edit-assets').onclick = () => {
     const form = document.getElementById('edit-assets-form');
     const isHidden = form.style.display === 'none';
@@ -2782,8 +2807,10 @@ function setupHubListeners() {
       syncFeatureToGoogleSheet('addLoan', newLoan);
       renderAll();
       addLoanForm.reset();
-      addLoanForm.style.display = 'none';
-      document.getElementById('btn-toggle-add-loan').innerText = '+ Add New Loan';
+      
+      // Auto-switch tab back to "Ongoing Loans"
+      if (btnTabOngoing) btnTabOngoing.click();
+      
       showToast(`Loan "${name}" tracker added.`);
     });
   }

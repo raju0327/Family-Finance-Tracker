@@ -978,34 +978,44 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
+      
+      <!-- Tab Buttons -->
+      <div class="emi-tab-buttons" style="display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--apple-border); padding-bottom: 12px; flex-shrink: 0; padding-left: 4px; padding-right: 4px;">
+        <button id="btn-tab-ongoing-loans" style="flex: 1; padding: 10px; font-size: 0.72rem; font-weight: 700; border-radius: var(--border-radius-sm); border: none; cursor: pointer; transition: all 0.2s ease;">Ongoing Loans</button>
+        <button id="btn-tab-entry-loan" style="flex: 1; padding: 10px; font-size: 0.72rem; font-weight: 700; border-radius: var(--border-radius-sm); border: none; cursor: pointer; transition: all 0.2s ease;">Entry Loan Details</button>
+      </div>
+
       <div style="flex: 1; overflow-y: auto;">
-        <div id="emi-list-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-          <!-- Loaded Dynamically -->
+        <!-- Ongoing Loans View -->
+        <div id="view-ongoing-loans">
+          <div id="emi-list-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <!-- Loaded Dynamically -->
+          </div>
         </div>
 
-        <!-- Add Loan Button -->
-        <button id="btn-toggle-add-loan" class="glass-submit-btn" style="background: var(--apple-blue);">+ Add New
-          Loan</button>
-        <form id="add-loan-form"
-          style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
-          <div class="form-group">
-            <label for="loan-name-input">Loan Name</label>
-            <input type="text" id="loan-name-input" class="glass-input" required placeholder="e.g. Home Loan HDFC">
-          </div>
-          <div class="form-group">
-            <label for="loan-total-input">Total Loan Dues</label>
-            <input type="number" id="loan-total-input" class="glass-input" required min="1" placeholder="4500000">
-          </div>
-          <div class="form-group">
-            <label for="loan-emi-input">Monthly EMI Payment</label>
-            <input type="number" id="loan-emi-input" class="glass-input" required min="1" placeholder="34500">
-          </div>
-          <div class="form-group">
-            <label for="loan-due-input">EMI Due Date</label>
-            <input type="date" id="loan-due-input" class="glass-input" required>
-          </div>
-          <button type="submit" class="glass-submit-btn" style="margin-top: 6px;">Add Loan</button>
-        </form>
+        <!-- Entry Loan Details View -->
+        <div id="view-entry-loan" style="display: none;">
+          <form id="add-loan-form"
+            style="display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
+            <div class="form-group">
+              <label for="loan-name-input">Loan Name</label>
+              <input type="text" id="loan-name-input" class="glass-input" required placeholder="e.g. Home Loan HDFC">
+            </div>
+            <div class="form-group">
+              <label for="loan-total-input">Total Loan Dues</label>
+              <input type="number" id="loan-total-input" class="glass-input" required min="1" placeholder="4500000">
+            </div>
+            <div class="form-group">
+              <label for="loan-emi-input">Monthly EMI Payment</label>
+              <input type="number" id="loan-emi-input" class="glass-input" required min="1" placeholder="34500">
+            </div>
+            <div class="form-group">
+              <label for="loan-due-input">EMI Due Date</label>
+              <input type="date" id="loan-due-input" class="glass-input" required>
+            </div>
+            <button type="submit" class="glass-submit-btn" style="margin-top: 6px;">Add Loan</button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
