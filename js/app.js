@@ -548,13 +548,13 @@ function loadData() {
   const localInvest = localStorage.getItem('orbit_invest');
 
   if (localSubs) {
-    subscriptions = JSON.parse(localSubs);
+    subscriptions = JSON.parse(localSubs).filter(s => s.name !== 'Netflix Premium' && s.name !== 'Internet Broadband' && s.name !== 'Electricity Bill');
   } else {
     subscriptions = [];
   }
 
   if (localLoans) {
-    loans = JSON.parse(localLoans);
+    loans = JSON.parse(localLoans).filter(l => l.name !== 'Home Loan HDFC' && l.name !== 'Car Loan SBI');
   } else {
     loans = [];
   }
