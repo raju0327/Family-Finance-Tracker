@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,13 +11,14 @@
   <link rel="stylesheet" href="styles.css?v=1.0.2">
   <link rel="manifest" href="manifest.json">
 </head>
+
 <body>
 
   <!-- Device Simulator Shell (Clean Bezel-less Border Frame) -->
   <div class="device-shell">
-    
+
     <div class="app-container">
-      
+
 
       <!-- App Header -->
       <header class="app-header">
@@ -25,7 +27,8 @@
           <span>Family Expense Tracker</span>
         </div>
         <div style="display: flex; gap: 14px; align-items: center;">
-          <button id="btn-reset-data" class="btn-link" style="color: var(--apple-blue);" title="Sync from Google Sheets">
+          <button id="btn-reset-data" class="btn-link" style="color: var(--apple-blue);"
+            title="Sync from Google Sheets">
             <i class="fas fa-sync-alt"></i>
           </button>
           <button id="btn-open-settings" class="btn-link" style="color: var(--apple-blue);" title="Settings Menu">
@@ -45,15 +48,17 @@
       <!-- Main Scrollable App Views -->
       <main class="app-content">
         <!-- Pull to Refresh Spinner Indicator -->
-        <div id="pull-to-refresh" style="display: flex; align-items: center; justify-content: center; height: 0; overflow: hidden; transition: height 0.2s ease, opacity 0.2s ease; opacity: 0; font-size: 0.72rem; color: var(--apple-text-secondary); gap: 6px; flex-shrink: 0; margin-bottom: 2px;">
+        <div id="pull-to-refresh"
+          style="display: flex; align-items: center; justify-content: center; height: 0; overflow: hidden; transition: height 0.2s ease, opacity 0.2s ease; opacity: 0; font-size: 0.72rem; color: var(--apple-text-secondary); gap: 6px; flex-shrink: 0; margin-bottom: 2px;">
           <i class="fas fa-sync-alt" id="pull-refresh-icon" style="transition: transform 0.2s ease;"></i>
           <span id="pull-refresh-text">Pull down to refresh</span>
         </div>
-        
+
         <!-- ================= DASHBOARD VIEW ================= -->
         <div id="dashboard-view" class="view-panel active">
           <!-- Smart Reminders Panel -->
-          <div id="smart-reminders-box" style="margin-bottom: 14px; display: none; flex-direction: column; gap: 8px;"></div>
+          <div id="smart-reminders-box" style="margin-bottom: 14px; display: none; flex-direction: column; gap: 8px;">
+          </div>
           <!-- Total Balance Card -->
           <div class="glass-panel balance-card">
             <!-- Premium Card Vector Wave Overlay -->
@@ -84,14 +89,21 @@
 
           <!-- Accounts Balance Slider -->
           <div class="accounts-slider-container" style="margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 4px;">
-              <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); letter-spacing: 0.5px;">My Accounts & Wallets</span>
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 4px;">
+              <span
+                style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); letter-spacing: 0.5px;">My
+                Accounts & Wallets</span>
               <div style="display: flex; gap: 8px; align-items: center;">
-                <span id="btn-open-transfer" style="font-size: 0.62rem; color: var(--apple-blue); font-weight: 700; cursor: pointer; text-decoration: underline;"><i class="fas fa-random"></i> Transfer</span>
-                <span style="font-size: 0.6rem; color: var(--apple-gray); font-weight: 500;">Swipe <i class="fas fa-arrow-right"></i></span>
+                <span id="btn-open-transfer"
+                  style="font-size: 0.62rem; color: var(--apple-blue); font-weight: 700; cursor: pointer; text-decoration: underline;"><i
+                    class="fas fa-random"></i> Transfer</span>
+                <span style="font-size: 0.6rem; color: var(--apple-gray); font-weight: 500;">Swipe <i
+                    class="fas fa-arrow-right"></i></span>
               </div>
             </div>
-            <div class="accounts-carousel" id="accounts-carousel-list" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
+            <div class="accounts-carousel" id="accounts-carousel-list"
+              style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
               <!-- Dynamic Account Cards will be loaded here -->
             </div>
           </div>
@@ -133,26 +145,31 @@
           <div class="glass-panel" style="padding: 12px; margin-bottom: 12px;">
             <div style="display: flex; gap: 8px; align-items: center;">
               <div class="form-group" style="margin-bottom: 0; flex: 1;">
-                <input type="text" id="search-tx" class="glass-input" placeholder="Search description..." style="padding: 8px 12px; font-size: 0.75rem; width: 100%;">
+                <input type="text" id="search-tx" class="glass-input" placeholder="Search description..."
+                  style="padding: 8px 12px; font-size: 0.75rem; width: 100%;">
               </div>
-              <button id="btn-toggle-filters" class="glass-submit-btn" style="margin-top: 0; padding: 8px 12px; font-size: 0.75rem; background: var(--apple-card); border: 1px solid var(--apple-border); color: var(--apple-text); flex-shrink: 0;">
+              <button id="btn-toggle-filters" class="glass-submit-btn"
+                style="margin-top: 0; padding: 8px 12px; font-size: 0.75rem; background: var(--apple-card); border: 1px solid var(--apple-border); color: var(--apple-text); flex-shrink: 0;">
                 <i class="fas fa-filter"></i> Filters
               </button>
             </div>
-            
+
             <!-- Expandable filter options -->
-            <div id="ledger-filters-panel" style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--apple-border);">
+            <div id="ledger-filters-panel"
+              style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--apple-border);">
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="form-group" style="margin-bottom: 0;">
                   <label style="font-size: 0.58rem;">Category</label>
-                  <select id="filter-category-select" class="glass-select" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                  <select id="filter-category-select" class="glass-select"
+                    style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
                     <option value="all">All Categories</option>
                     <!-- Categories populated dynamically -->
                   </select>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                   <label style="font-size: 0.58rem;">Account / Wallet</label>
-                  <select id="filter-account-select" class="glass-select" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                  <select id="filter-account-select" class="glass-select"
+                    style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
                     <option value="all">All Accounts</option>
                     <option value="cash">💵 Cash</option>
                     <option value="bank">🏦 Bank Account</option>
@@ -165,24 +182,29 @@
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="form-group" style="margin-bottom: 0;">
                   <label style="font-size: 0.58rem;">Specific Date</label>
-                  <input type="date" id="filter-date-input" class="glass-input" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                  <input type="date" id="filter-date-input" class="glass-input"
+                    style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                   <label style="font-size: 0.58rem;">Tags</label>
-                  <input type="text" id="filter-tags-input" class="glass-input" placeholder="e.g. food" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                  <input type="text" id="filter-tags-input" class="glass-input" placeholder="e.g. food"
+                    style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
                 </div>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="form-group" style="margin-bottom: 0;">
                   <label style="font-size: 0.58rem;">Min Amount</label>
-                  <input type="number" id="filter-min-amount" class="glass-input" placeholder="Min" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                  <input type="number" id="filter-min-amount" class="glass-input" placeholder="Min"
+                    style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                   <label style="font-size: 0.58rem;">Max Amount</label>
-                  <input type="number" id="filter-max-amount" class="glass-input" placeholder="Max" style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
+                  <input type="number" id="filter-max-amount" class="glass-input" placeholder="Max"
+                    style="padding: 6px 8px; font-size: 0.7rem; width: 100%;">
                 </div>
               </div>
-              <button id="btn-clear-filters" class="glass-submit-btn" style="margin-top: 4px; padding: 6px; font-size: 0.65rem; background: var(--apple-red); color: white; border: none; font-weight: 700;">
+              <button id="btn-clear-filters" class="glass-submit-btn"
+                style="margin-top: 4px; padding: 6px; font-size: 0.65rem; background: var(--apple-red); color: white; border: none; font-weight: 700;">
                 Reset All Filters
               </button>
             </div>
@@ -231,66 +253,78 @@
         <!-- ================= TOOLS HUB VIEW ================= -->
         <div id="tools-view" class="view-panel">
           <div class="glass-panel" style="padding: 16px; margin-bottom: 16px;">
-            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: var(--apple-text);">Feature Hub</h3>
-            
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: var(--apple-text);">Feature Hub
+            </h3>
+
             <div class="tools-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;">
               <!-- Savings Goals -->
-              <div class="tool-card-btn" id="btn-tool-goals" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+              <div class="tool-card-btn" id="btn-tool-goals"
+                style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
                 <span style="font-size: 1.5rem;">🎯</span>
                 <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Savings Goals</span>
                 <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Track savings targets</span>
               </div>
-              
+
               <!-- Calendar View -->
-              <div class="tool-card-btn" id="btn-tool-calendar" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+              <div class="tool-card-btn" id="btn-tool-calendar"
+                style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
                 <span style="font-size: 1.5rem;">📅</span>
                 <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Calendar Ledger</span>
                 <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">View daily statements</span>
               </div>
-              
+
               <!-- Bills & Subscriptions -->
-              <div class="tool-card-btn" id="btn-tool-subs" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+              <div class="tool-card-btn" id="btn-tool-subs"
+                style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
                 <span style="font-size: 1.5rem;">💳</span>
                 <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Subscriptions</span>
                 <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Netflix, Utility bills</span>
               </div>
-              
+
               <!-- Loan & EMI Tracker -->
-              <div class="tool-card-btn" id="btn-tool-emi" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+              <div class="tool-card-btn" id="btn-tool-emi"
+                style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
                 <span style="font-size: 1.5rem;">💵</span>
                 <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">EMI & Loans</span>
                 <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Remaining debts list</span>
               </div>
-              
+
               <!-- Investment SIP Tracker -->
-              <div class="tool-card-btn" id="btn-tool-invest" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+              <div class="tool-card-btn" id="btn-tool-invest"
+                style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
                 <span style="font-size: 1.5rem;">📈</span>
                 <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Investments</span>
                 <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Mutual funds & SIPs</span>
               </div>
-              
+
               <!-- Split Bills -->
-              <div class="tool-card-btn" id="btn-tool-split" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+              <div class="tool-card-btn" id="btn-tool-split"
+                style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
                 <span style="font-size: 1.5rem;">👨‍👩‍👧</span>
                 <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Split Expenses</span>
                 <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Divide bills in family</span>
               </div>
-              
+
               <!-- Accounts & Wallets -->
-              <div class="tool-card-btn" id="btn-tool-accounts" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
+              <div class="tool-card-btn" id="btn-tool-accounts"
+                style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; transition: all 0.25s ease;">
                 <span style="font-size: 1.5rem;">🏦</span>
                 <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Accounts & Wallets</span>
                 <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Balances breakdown</span>
               </div>
 
               <!-- Challenges & Streak -->
-              <div class="tool-card-btn" id="btn-tool-challenges" style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; grid-column: span 2; transition: all 0.25s ease;">
+              <div class="tool-card-btn" id="btn-tool-challenges"
+                style="background: var(--apple-card); border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--border-radius-lg); display: flex; flex-direction: column; gap: 8px; cursor: pointer; align-items: flex-start; grid-column: span 2; transition: all 0.25s ease;">
                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
                   <span style="font-size: 1.5rem;">🏆</span>
-                  <span class="badge" style="background: var(--apple-blue); color: white; font-size: 0.55rem; padding: 2px 6px; border-radius: 10px;">Gamification</span>
+                  <span class="badge"
+                    style="background: var(--apple-blue); color: white; font-size: 0.55rem; padding: 2px 6px; border-radius: 10px;">Gamification</span>
                 </div>
-                <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Challenges & Streaks</span>
-                <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Savings streak & No-Spend days count</span>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--apple-text);">Challenges &
+                  Streaks</span>
+                <span style="font-size: 0.58rem; color: var(--apple-text-secondary);">Savings streak & No-Spend days
+                  count</span>
               </div>
             </div>
           </div>
@@ -308,12 +342,12 @@
           <i class="fas fa-list-ul"></i>
           <span>Ledger</span>
         </a>
-        
+
         <!-- Floating Add Transaction Button -->
         <button class="fab-btn" id="btn-open-add-tx" title="Add Transaction">
           <i class="fas fa-plus"></i>
         </button>
-        
+
         <a href="#" class="nav-item nav-trigger" data-target="budget-view">
           <i class="fas fa-chart-pie"></i>
           <span>Budgets</span>
@@ -334,7 +368,7 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <div class="drawer-body">
         <!-- Section 1: Themes Dropdown -->
         <div class="settings-section">
@@ -345,7 +379,7 @@
             <option value="futuristic">Futuristic Glassmorphic</option>
           </select>
         </div>
-        
+
         <!-- Section 2: Currency Settings -->
         <div class="settings-section">
           <h4>Currency Symbol</h4>
@@ -356,19 +390,20 @@
             <option value="GBP">British Pound (£)</option>
           </select>
         </div>
-        
+
         <!-- Section 3: Profile Settings -->
         <div class="settings-section">
           <h4>Family Members</h4>
           <div class="profiles-edit-list" id="settings-profiles-list">
             <!-- Dynamically loaded -->
           </div>
-          
+
           <button class="btn-link" id="btn-toggle-add-profile-form" style="margin-top: 10px; font-weight: 600;">
             + Add Family Member
           </button>
-          
-          <form id="add-profile-form" style="display: none; flex-direction: column; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--apple-border);">
+
+          <form id="add-profile-form"
+            style="display: none; flex-direction: column; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--apple-border);">
             <div class="form-group">
               <label>Name</label>
               <input type="text" id="profile-name-input" class="glass-input" required placeholder="e.g. Grandpa">
@@ -379,7 +414,8 @@
             </div>
             <div class="form-group">
               <label>Avatar Emoji</label>
-              <input type="text" id="profile-avatar-input" class="glass-input" required placeholder="👴" maxlength="2" style="font-size: 1.2rem;">
+              <input type="text" id="profile-avatar-input" class="glass-input" required placeholder="👴" maxlength="2"
+                style="font-size: 1.2rem;">
             </div>
             <div class="form-group">
               <label>Avatar Color</label>
@@ -401,8 +437,9 @@
           <button class="btn-link" id="btn-toggle-add-cat-form" style="margin-bottom: 10px; font-weight: 600;">
             + Create New Category
           </button>
-          
-          <form id="add-category-form" style="display: none; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--apple-border);">
+
+          <form id="add-category-form"
+            style="display: none; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--apple-border);">
             <div class="form-group">
               <label>Category Name</label>
               <input type="text" id="cat-name-input" class="glass-input" required placeholder="e.g. Gifts & Donations">
@@ -436,7 +473,8 @@
             </div>
             <div class="form-group">
               <label>Category Color</label>
-              <input type="color" id="cat-color-input" class="glass-input" value="#6366f1" style="padding: 4px; height: 40px; border: none; background: transparent; cursor: pointer;">
+              <input type="color" id="cat-color-input" class="glass-input" value="#6366f1"
+                style="padding: 4px; height: 40px; border: none; background: transparent; cursor: pointer;">
             </div>
             <div class="form-group" id="cat-budget-group">
               <label>Monthly Budget Limit</label>
@@ -465,17 +503,26 @@
           </div>
           <div class="form-group">
             <label>Google Web App URL</label>
-            <input type="url" id="sheet-url-input" class="glass-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size: 0.75rem;">
+            <input type="url" id="sheet-url-input" class="glass-input"
+              placeholder="https://script.google.com/macros/s/AKfycbwBgR14Sfj5jvaMqCaJ3tVEdhDjYRn5LgGf8ihBkYeK6ePYUYn6ov_Ax0w6zl0mSPky1A/exec"
+              style="font-size: 0.75rem;">
           </div>
-          <button id="btn-test-sheet" class="glass-submit-btn" style="padding: 10px; background: rgba(0,0,0,0.02); border: 1px solid var(--apple-border); width: 100%; color: var(--apple-blue); margin-top: 5px;">
+          <button id="btn-test-sheet" class="glass-submit-btn"
+            style="padding: 10px; background: rgba(0,0,0,0.02); border: 1px solid var(--apple-border); width: 100%; color: var(--apple-blue); margin-top: 5px;">
             Test Sync Status
           </button>
 
-          <button class="btn-link" id="btn-toggle-guide" style="font-size: 0.65rem; margin-top: 8px; color: var(--apple-blue); display: block; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">Show Setup Guide</button>
+          <button class="btn-link" id="btn-toggle-guide"
+            style="font-size: 0.65rem; margin-top: 8px; color: var(--apple-blue); display: block; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">Show
+            Setup Guide</button>
 
-          <div id="sheets-guide-box" style="display: none; margin-top: 15px; background: rgba(0,0,0,0.02); padding: 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--apple-border);">
-            <span style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--apple-blue); display: block; margin-bottom: 6px;">Setup Guide:</span>
-            <ol style="font-size: 0.65rem; color: var(--apple-gray); padding-left: 14px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
+          <div id="sheets-guide-box"
+            style="display: none; margin-top: 15px; background: rgba(0,0,0,0.02); padding: 12px; border-radius: var(--border-radius-sm); border: 1px solid var(--apple-border);">
+            <span
+              style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--apple-blue); display: block; margin-bottom: 6px;">Setup
+              Guide:</span>
+            <ol
+              style="font-size: 0.65rem; color: var(--apple-gray); padding-left: 14px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
               <li>Create a Google Sheet.</li>
               <li>Extensions > Apps Script.</li>
               <li>Paste script deployment snippet.</li>
@@ -484,17 +531,20 @@
               <li>Copy and paste the Web App URL here.</li>
             </ol>
             <button class="btn-link" id="btn-show-code" style="font-size: 0.65rem;">Show Deployment Code</button>
-            <pre id="code-snippet-box" style="display: none; margin-top: 8px; font-size: 0.55rem; background: #fafafa; padding: 8px; border-radius: 4px; overflow-x: auto; color: #1c1e21; font-family: monospace; border: 1px solid var(--apple-border); user-select: all; cursor: pointer; max-height: 120px;"></pre>
+            <pre id="code-snippet-box"
+              style="display: none; margin-top: 8px; font-size: 0.55rem; background: #fafafa; padding: 8px; border-radius: 4px; overflow-x: auto; color: #1c1e21; font-family: monospace; border: 1px solid var(--apple-border); user-select: all; cursor: pointer; max-height: 120px;"></pre>
           </div>
         </div>
 
         <!-- Section 6: App Update -->
         <div class="settings-section">
           <h4>Application Update</h4>
-          <button id="btn-update-app" class="glass-submit-btn" style="width: 100%; margin-top: 0; background: var(--apple-blue); color: #ffffff;">
+          <button id="btn-update-app" class="glass-submit-btn"
+            style="width: 100%; margin-top: 0; background: var(--apple-blue); color: #ffffff;">
             Check & Install Updates
           </button>
-          <span style="font-size: 0.6rem; color: var(--apple-gray); display: block; margin-top: 6px; text-align: center;">
+          <span
+            style="font-size: 0.6rem; color: var(--apple-gray); display: block; margin-top: 6px; text-align: center;">
             Force download the latest app version from GitHub.
           </span>
         </div>
@@ -503,10 +553,12 @@
         <div class="settings-section">
           <h4>Backup & Restore</h4>
           <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-            <button id="btn-export-csv" class="glass-submit-btn" style="flex: 1; font-size: 0.65rem; margin-top: 0; background: var(--apple-green); color: #fff; padding: 10px 4px;">
+            <button id="btn-export-csv" class="glass-submit-btn"
+              style="flex: 1; font-size: 0.65rem; margin-top: 0; background: var(--apple-green); color: #fff; padding: 10px 4px;">
               <i class="fas fa-file-csv" style="margin-right: 4px;"></i> Export CSV
             </button>
-            <label for="restore-file-input" class="glass-submit-btn" style="flex: 1; font-size: 0.65rem; margin-top: 0; background: var(--apple-purple); color: #fff; text-align: center; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 10px 4px; box-sizing: border-box; line-height: 1.2;">
+            <label for="restore-file-input" class="glass-submit-btn"
+              style="flex: 1; font-size: 0.65rem; margin-top: 0; background: var(--apple-purple); color: #fff; text-align: center; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 10px 4px; box-sizing: border-box; line-height: 1.2;">
               <i class="fas fa-file-upload" style="margin-right: 4px;"></i> Restore CSV
             </label>
             <input type="file" id="restore-file-input" accept=".csv" style="display: none;">
@@ -525,22 +577,25 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <form id="add-transaction-form" onsubmit="return false;">
         <!-- Smart Features Triggers -->
         <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-          <button type="button" id="btn-voice-add" class="glass-submit-btn" style="flex: 1; margin-top: 0; padding: 8px 6px; font-size: 0.68rem; background: var(--apple-purple); color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <button type="button" id="btn-voice-add" class="glass-submit-btn"
+            style="flex: 1; margin-top: 0; padding: 8px 6px; font-size: 0.68rem; background: var(--apple-purple); color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 4px;">
             <i class="fas fa-microphone" id="voice-icon"></i> <span id="voice-btn-text">Voice Entry</span>
           </button>
-          
-          <label for="receipt-file-input" class="glass-submit-btn" style="flex: 1; margin-top: 0; padding: 8px 6px; font-size: 0.68rem; background: var(--apple-blue); color: white; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; text-align: center; box-sizing: border-box; line-height: 1.2;">
+
+          <label for="receipt-file-input" class="glass-submit-btn"
+            style="flex: 1; margin-top: 0; padding: 8px 6px; font-size: 0.68rem; background: var(--apple-blue); color: white; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; text-align: center; box-sizing: border-box; line-height: 1.2;">
             <i class="fas fa-camera"></i> Scan Receipt
           </label>
           <input type="file" id="receipt-file-input" accept="image/*" style="display: none;">
         </div>
 
         <!-- Voice Soundwave Animation (hidden by default) -->
-        <div id="voice-waves-container" style="display: none; align-items: center; justify-content: center; gap: 3px; height: 18px; margin-bottom: 12px;">
+        <div id="voice-waves-container"
+          style="display: none; align-items: center; justify-content: center; gap: 3px; height: 18px; margin-bottom: 12px;">
           <span class="voice-bar"></span>
           <span class="voice-bar"></span>
           <span class="voice-bar"></span>
@@ -549,7 +604,8 @@
         </div>
 
         <!-- OCR Scanning Loader Overlay (hidden by default) -->
-        <div id="ocr-loader-overlay" style="display: none; align-items: center; justify-content: center; gap: 8px; font-size: 0.7rem; color: var(--apple-blue); font-weight: 600; margin-bottom: 12px; background: rgba(0, 122, 255, 0.04); border: 1.5px dashed var(--apple-blue); padding: 8px; border-radius: var(--border-radius-md);">
+        <div id="ocr-loader-overlay"
+          style="display: none; align-items: center; justify-content: center; gap: 8px; font-size: 0.7rem; color: var(--apple-blue); font-weight: 600; margin-bottom: 12px; background: rgba(0, 122, 255, 0.04); border: 1.5px dashed var(--apple-blue); padding: 8px; border-radius: var(--border-radius-md);">
           <i class="fas fa-circle-notch fa-spin"></i> Extracting receipt details via OCR...
         </div>
         <!-- Income/Expense Toggle -->
@@ -564,7 +620,8 @@
         <!-- Amount -->
         <div class="form-group">
           <label for="tx-amount-input" id="tx-amount-label">Amount (₹)</label>
-          <input type="number" id="tx-amount-input" class="glass-input" required min="0.01" step="0.01" placeholder="0.00" style="font-weight: 600; font-size: 1.1rem; color: var(--apple-blue);">
+          <input type="number" id="tx-amount-input" class="glass-input" required min="0.01" step="0.01"
+            placeholder="0.00" style="font-weight: 600; font-size: 1.1rem; color: var(--apple-blue);">
         </div>
 
         <!-- Category Selector -->
@@ -574,7 +631,8 @@
             <!-- Loaded Dynamically -->
           </select>
           <!-- Auto Category Detection badge -->
-          <div id="auto-cat-badge" style="display: none; font-size: 0.58rem; color: var(--apple-green); font-weight: 700; margin-top: 3px; gap: 4px; align-items: center;">
+          <div id="auto-cat-badge"
+            style="display: none; font-size: 0.58rem; color: var(--apple-green); font-weight: 700; margin-top: 3px; gap: 4px; align-items: center;">
             <i class="fas fa-magic"></i> Auto-detected category!
           </div>
         </div>
@@ -625,14 +683,17 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <form id="goal-contribution-form" onsubmit="return false;">
         <input type="hidden" id="contribution-goal-id">
         <div class="form-group">
           <label id="contribution-goal-label">Contribute Amount</label>
-          <input type="number" id="contribution-amount-input" class="glass-input" required min="1" step="1" placeholder="0" style="font-weight: 600; font-size: 1.1rem; color: var(--apple-green);">
+          <input type="number" id="contribution-amount-input" class="glass-input" required min="1" step="1"
+            placeholder="0" style="font-weight: 600; font-size: 1.1rem; color: var(--apple-green);">
         </div>
-        <button type="submit" class="glass-submit-btn" style="background: var(--apple-green); box-shadow: 0 4px 10px rgba(52, 199, 89, 0.15);">Add Contribution</button>
+        <button type="submit" class="glass-submit-btn"
+          style="background: var(--apple-green); box-shadow: 0 4px 10px rgba(52, 199, 89, 0.15);">Add
+          Contribution</button>
       </form>
     </div>
   </div>
@@ -642,7 +703,8 @@
     <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
       <div class="modal-header" style="margin-bottom: 12px; flex-shrink: 0;">
         <h3 id="cat-modal-title" style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
-          <span id="cat-modal-icon-badge" style="width: 28px; height: 28px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 0.85rem; color: white;">
+          <span id="cat-modal-icon-badge"
+            style="width: 28px; height: 28px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 0.85rem; color: white;">
             <i class="fas fa-shopping-basket"></i>
           </span>
           <span id="cat-modal-name">Category Details</span>
@@ -651,12 +713,14 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
-      <div class="cat-modal-summary" id="cat-modal-summary-box" style="margin-bottom: 16px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border); flex-shrink: 0; font-size: 0.75rem; display: flex; flex-direction: column; gap: 8px;">
+
+      <div class="cat-modal-summary" id="cat-modal-summary-box"
+        style="margin-bottom: 16px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border); flex-shrink: 0; font-size: 0.75rem; display: flex; flex-direction: column; gap: 8px;">
         <!-- Dynamic metrics -->
       </div>
-      
-      <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); margin-bottom: 8px; flex-shrink: 0;">
+
+      <div
+        style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); margin-bottom: 8px; flex-shrink: 0;">
         Transactions
       </div>
       <div class="transaction-list" id="cat-modal-tx-list" style="overflow-y: auto; flex: 1; min-height: 150px;">
@@ -670,7 +734,8 @@
     <div class="glass-modal" style="max-height: 85%; display: flex; flex-direction: column;">
       <div class="modal-header" style="margin-bottom: 12px; flex-shrink: 0;">
         <h3 id="acc-modal-title" style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
-          <span id="acc-modal-icon-badge" style="width: 28px; height: 28px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 0.85rem; color: white; background: var(--apple-blue);">
+          <span id="acc-modal-icon-badge"
+            style="width: 28px; height: 28px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 0.85rem; color: white; background: var(--apple-blue);">
             🏦
           </span>
           <span id="acc-modal-name">Account Details</span>
@@ -679,12 +744,14 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
-      <div class="acc-modal-summary" id="acc-modal-summary-box" style="margin-bottom: 16px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border); flex-shrink: 0; font-size: 0.75rem; display: flex; flex-direction: column; gap: 8px;">
+
+      <div class="acc-modal-summary" id="acc-modal-summary-box"
+        style="margin-bottom: 16px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border); flex-shrink: 0; font-size: 0.75rem; display: flex; flex-direction: column; gap: 8px;">
         <!-- Dynamic metrics -->
       </div>
-      
-      <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); margin-bottom: 8px; flex-shrink: 0;">
+
+      <div
+        style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); margin-bottom: 8px; flex-shrink: 0;">
         Transactions History
       </div>
       <div class="transaction-list" id="acc-modal-tx-list" style="overflow-y: auto; flex: 1; min-height: 150px;">
@@ -702,7 +769,7 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <form id="edit-profile-form" onsubmit="return false;">
         <input type="hidden" id="edit-profile-id">
         <div class="form-group">
@@ -743,7 +810,7 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <form id="edit-goal-form" onsubmit="return false;">
         <input type="hidden" id="edit-goal-id">
         <div class="form-group">
@@ -787,10 +854,12 @@
         <div id="goals-container" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
           <!-- Loaded dynamically -->
         </div>
-        
+
         <!-- Accordion Form: Add Goal -->
-        <button id="btn-toggle-add-goal" class="glass-submit-btn" style="background: var(--apple-blue); margin-top: 10px;">+ Create New Goal</button>
-        <form id="add-goal-form" style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
+        <button id="btn-toggle-add-goal" class="glass-submit-btn"
+          style="background: var(--apple-blue); margin-top: 10px;">+ Create New Goal</button>
+        <form id="add-goal-form"
+          style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
           <div class="form-group">
             <label for="goal-name-input">Goal Name</label>
             <input type="text" id="goal-name-input" class="glass-input" required placeholder="e.g. New iPhone">
@@ -825,22 +894,30 @@
         </button>
       </div>
       <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--apple-card); padding: 8px 12px; border-radius: var(--border-radius-md); border: 1px solid var(--apple-border);">
-          <button id="btn-prev-month" class="btn-link" style="color: var(--apple-blue);"><i class="fas fa-chevron-left"></i></button>
-          <span id="calendar-month-year" style="font-weight: 700; font-size: 0.85rem; color: var(--apple-text);">July 2026</span>
-          <button id="btn-next-month" class="btn-link" style="color: var(--apple-blue);"><i class="fas fa-chevron-right"></i></button>
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; background: var(--apple-card); padding: 8px 12px; border-radius: var(--border-radius-md); border: 1px solid var(--apple-border);">
+          <button id="btn-prev-month" class="btn-link" style="color: var(--apple-blue);"><i
+              class="fas fa-chevron-left"></i></button>
+          <span id="calendar-month-year" style="font-weight: 700; font-size: 0.85rem; color: var(--apple-text);">July
+            2026</span>
+          <button id="btn-next-month" class="btn-link" style="color: var(--apple-blue);"><i
+              class="fas fa-chevron-right"></i></button>
         </div>
-        
+
         <!-- Calendar Grid -->
-        <div id="calendar-grid-box" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; font-size: 0.72rem; padding: 4px;">
+        <div id="calendar-grid-box"
+          style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; font-size: 0.72rem; padding: 4px;">
           <!-- Loaded Dynamically -->
         </div>
 
-        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); margin-top: 10px;">
+        <div
+          style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--apple-text-secondary); margin-top: 10px;">
           Day Transactions
         </div>
-        <div id="calendar-day-txs" style="flex: 1; min-height: 100px; overflow-y: auto; border: 1px solid var(--apple-border); border-radius: var(--border-radius-md); padding: 8px; background: var(--apple-bg);">
-          <div style="text-align: center; color: var(--apple-gray); font-size: 0.65rem; padding: 20px 0;">Tap a calendar date to view transactions</div>
+        <div id="calendar-day-txs"
+          style="flex: 1; min-height: 100px; overflow-y: auto; border: 1px solid var(--apple-border); border-radius: var(--border-radius-md); padding: 8px; background: var(--apple-bg);">
+          <div style="text-align: center; color: var(--apple-gray); font-size: 0.65rem; padding: 20px 0;">Tap a calendar
+            date to view transactions</div>
         </div>
       </div>
     </div>
@@ -861,8 +938,10 @@
         </div>
 
         <!-- Add Subscription Trigger Button -->
-        <button id="btn-toggle-add-sub" class="glass-submit-btn" style="background: var(--apple-blue);">+ Track New Subscription</button>
-        <form id="add-sub-form" style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
+        <button id="btn-toggle-add-sub" class="glass-submit-btn" style="background: var(--apple-blue);">+ Track New
+          Subscription</button>
+        <form id="add-sub-form"
+          style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
           <div class="form-group">
             <label for="sub-name-input">Subscription Name</label>
             <input type="text" id="sub-name-input" class="glass-input" required placeholder="e.g. Netflix Premium">
@@ -905,8 +984,10 @@
         </div>
 
         <!-- Add Loan Button -->
-        <button id="btn-toggle-add-loan" class="glass-submit-btn" style="background: var(--apple-blue);">+ Add New Loan</button>
-        <form id="add-loan-form" style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
+        <button id="btn-toggle-add-loan" class="glass-submit-btn" style="background: var(--apple-blue);">+ Add New
+          Loan</button>
+        <form id="add-loan-form"
+          style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
           <div class="form-group">
             <label for="loan-name-input">Loan Name</label>
             <input type="text" id="loan-name-input" class="glass-input" required placeholder="e.g. Home Loan HDFC">
@@ -943,8 +1024,10 @@
           <!-- Loaded Dynamically -->
         </div>
 
-        <button id="btn-toggle-edit-assets" class="glass-submit-btn" style="background: var(--apple-blue);">Update Asset Values</button>
-        <form id="edit-assets-form" style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
+        <button id="btn-toggle-edit-assets" class="glass-submit-btn" style="background: var(--apple-blue);">Update Asset
+          Values</button>
+        <form id="edit-assets-form"
+          style="display: none; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; border-radius: var(--border-radius-md); background: var(--apple-bg); border: 1px solid var(--apple-border);">
           <div class="form-group">
             <label for="asset-stocks-input">Stocks & Equities Value</label>
             <input type="number" id="asset-stocks-input" class="glass-input" min="0">
@@ -980,7 +1063,8 @@
         <form id="split-bill-form" onsubmit="return false;" style="display: flex; flex-direction: column; gap: 12px;">
           <div class="form-group">
             <label for="split-amount-input">Total Bill Amount</label>
-            <input type="number" id="split-amount-input" class="glass-input" required min="1" step="0.01" placeholder="1500">
+            <input type="number" id="split-amount-input" class="glass-input" required min="1" step="0.01"
+              placeholder="1500">
           </div>
           <div class="form-group">
             <label for="split-desc-input">Bill Description</label>
@@ -992,14 +1076,15 @@
               <!-- Loaded Dynamically -->
             </select>
           </div>
-          
+
           <div class="form-group">
             <label>Share Bill With</label>
-            <div id="split-checkboxes-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 120px; overflow-y: auto; padding: 6px; border: 1px solid var(--apple-border); border-radius: var(--border-radius-md); background: var(--apple-bg);">
+            <div id="split-checkboxes-container"
+              style="display: flex; flex-direction: column; gap: 8px; max-height: 120px; overflow-y: auto; padding: 6px; border: 1px solid var(--apple-border); border-radius: var(--border-radius-md); background: var(--apple-bg);">
               <!-- Checkboxes rendered dynamically -->
             </div>
           </div>
-          
+
           <button type="submit" class="glass-submit-btn">Record Split Logs</button>
         </form>
       </div>
@@ -1015,7 +1100,8 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;" id="challenges-view-content">
+      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;"
+        id="challenges-view-content">
         <!-- Loaded Dynamically -->
       </div>
     </div>
@@ -1030,7 +1116,7 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <form id="transfer-funds-form" onsubmit="return false;">
         <div class="form-group">
           <label for="transfer-from-select">From Account</label>
@@ -1054,7 +1140,8 @@
         </div>
         <div class="form-group">
           <label for="transfer-amount-input">Amount</label>
-          <input type="number" id="transfer-amount-input" class="glass-input" required min="1" step="0.01" placeholder="1000">
+          <input type="number" id="transfer-amount-input" class="glass-input" required min="1" step="0.01"
+            placeholder="1000">
         </div>
         <div class="form-group">
           <label for="transfer-date-input">Date</label>
@@ -1074,38 +1161,62 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 10px;" id="accounts-hub-view-list">
+      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 10px;"
+        id="accounts-hub-view-list">
         <!-- Loaded dynamically from app.js -->
       </div>
     </div>
   </div>
 
   <!-- PIN Lock Screen Overlay -->
-  <div class="pin-lock-overlay" id="pin-lock-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--apple-bg); z-index: 10000; align-items: center; justify-content: center; flex-direction: column; box-sizing: border-box; padding: 20px;">
+  <div class="pin-lock-overlay" id="pin-lock-overlay"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--apple-bg); z-index: 10000; align-items: center; justify-content: center; flex-direction: column; box-sizing: border-box; padding: 20px;">
     <div class="pin-logo" style="font-size: 2.5rem; color: var(--apple-blue); margin-bottom: 20px;">
       <i class="fas fa-lock"></i>
     </div>
     <div style="font-size: 1rem; font-weight: 700; color: var(--apple-text); margin-bottom: 8px;">Enter PIN Code</div>
     <div style="font-size: 0.7rem; color: var(--apple-gray); margin-bottom: 24px;">Default PIN is 1234</div>
     <div class="pin-dots" style="display: flex; gap: 16px; margin-bottom: 40px;">
-      <div class="pin-dot" id="dot-0" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;"></div>
-      <div class="pin-dot" id="dot-1" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;"></div>
-      <div class="pin-dot" id="dot-2" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;"></div>
-      <div class="pin-dot" id="dot-3" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;"></div>
+      <div class="pin-dot" id="dot-0"
+        style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;">
+      </div>
+      <div class="pin-dot" id="dot-1"
+        style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;">
+      </div>
+      <div class="pin-dot" id="dot-2"
+        style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;">
+      </div>
+      <div class="pin-dot" id="dot-3"
+        style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--apple-border); background: transparent; transition: all 0.15s ease;">
+      </div>
     </div>
-    <div class="pin-keypad" style="display: grid; grid-template-columns: repeat(3, 70px); gap: 18px 24px; justify-content: center;">
-      <button class="pin-key" data-val="1" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">1</button>
-      <button class="pin-key" data-val="2" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">2</button>
-      <button class="pin-key" data-val="3" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">3</button>
-      <button class="pin-key" data-val="4" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">4</button>
-      <button class="pin-key" data-val="5" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">5</button>
-      <button class="pin-key" data-val="6" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">6</button>
-      <button class="pin-key" data-val="7" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">7</button>
-      <button class="pin-key" data-val="8" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">8</button>
-      <button class="pin-key" data-val="9" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">9</button>
-      <button class="pin-key" id="btn-pin-clear" style="width: 70px; height: 70px; border-radius: 50%; border: none; background: transparent; color: var(--apple-text); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">Clear</button>
-      <button class="pin-key" data-val="0" style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">0</button>
-      <button class="pin-key" id="btn-pin-delete" style="width: 70px; height: 70px; border-radius: 50%; border: none; background: transparent; color: var(--apple-text); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;"><i class="fas fa-backspace"></i></button>
+    <div class="pin-keypad"
+      style="display: grid; grid-template-columns: repeat(3, 70px); gap: 18px 24px; justify-content: center;">
+      <button class="pin-key" data-val="1"
+        style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">1</button>
+      <button class="pin-key" data-val="2"
+        style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">2</button>
+      <button class="pin-key" data-val="3"
+        style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">3</button>
+      <button class="pin-key" data-val="4"
+        style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">4</button>
+      <button class="pin-key" data-val="5"
+        style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">5</button>
+      <button class="pin-key" data-val="6"
+        style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">6</button>
+      <button class="pin-key" data-val="7"
+        style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">7</button>
+      <button class="pin-key" data-val="8"
+        style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">8</button>
+      <button class="pin-key" data-val="9"
+        style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">9</button>
+      <button class="pin-key" id="btn-pin-clear"
+        style="width: 70px; height: 70px; border-radius: 50%; border: none; background: transparent; color: var(--apple-text); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">Clear</button>
+      <button class="pin-key" data-val="0"
+        style="width: 70px; height: 70px; border-radius: 50%; border: 1px solid var(--apple-border); background: var(--apple-bg); color: var(--apple-text); font-size: 1.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">0</button>
+      <button class="pin-key" id="btn-pin-delete"
+        style="width: 70px; height: 70px; border-radius: 50%; border: none; background: transparent; color: var(--apple-text); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;"><i
+          class="fas fa-backspace"></i></button>
     </div>
   </div>
 
@@ -1114,4 +1225,5 @@
   <script src="js/charts.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>
