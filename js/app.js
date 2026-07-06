@@ -48,7 +48,7 @@ function doPost(e) {
     
     // ACTION: Save Goals Table
     if (action === "saveGoals") {
-      var sheet = ss.getSheetByName("Goals") || ss.insertSheet("Goals");
+      var sheet = ss.getSheetByName("Savings Goals") || ss.insertSheet("Savings Goals");
       sheet.clear();
       sheet.appendRow(["Goal ID", "Name", "Target", "Current", "Color"]);
       var goalsData = payload.data;
@@ -76,7 +76,7 @@ function doPost(e) {
     
     // ACTION: Save Loans Table
     if (action === "saveLoans") {
-      var sheet = ss.getSheetByName("Loans") || ss.insertSheet("Loans");
+      var sheet = ss.getSheetByName("Loan & EMI Tracker") || ss.insertSheet("Loan & EMI Tracker");
       sheet.clear();
       sheet.appendRow(["Loan ID", "Name", "Total", "EMI", "Due Date"]);
       var loansData = payload.data;
@@ -184,7 +184,7 @@ function doGet(e) {
       }
     }
     
-    var goalsSheet = ss.getSheetByName("Goals");
+    var goalsSheet = ss.getSheetByName("Savings Goals");
     if (goalsSheet) {
       var gData = goalsSheet.getDataRange().getValues();
       if (gData.length > 1) {
@@ -220,7 +220,7 @@ function doGet(e) {
       }
     }
 
-    var loansSheet = ss.getSheetByName("Loans");
+    var loansSheet = ss.getSheetByName("Loan & EMI Tracker");
     if (loansSheet) {
       var lData = loansSheet.getDataRange().getValues();
       if (lData.length > 1) {
@@ -539,20 +539,13 @@ function loadData() {
   if (localSubs) {
     subscriptions = JSON.parse(localSubs);
   } else {
-    subscriptions = [
-      { id: 'sub-1', name: 'Netflix Premium', amount: 649, dueDate: getFutureDate(15), account: 'card' },
-      { id: 'sub-2', name: 'Internet Broadband', amount: 999, dueDate: getFutureDate(10), account: 'bank' },
-      { id: 'sub-3', name: 'Electricity Bill', amount: 2500, dueDate: getFutureDate(22), account: 'bank' }
-    ];
+    subscriptions = [];
   }
 
   if (localLoans) {
     loans = JSON.parse(localLoans);
   } else {
-    loans = [
-      { id: 'loan-1', name: 'Home Loan HDFC', total: 4500000, emi: 34500, dueDate: getFutureDate(5) },
-      { id: 'loan-2', name: 'Car Loan SBI', total: 800000, emi: 12000, dueDate: getFutureDate(10) }
-    ];
+    loans = [];
   }
 
   if (localInvest) {
