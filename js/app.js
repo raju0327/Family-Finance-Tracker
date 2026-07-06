@@ -1455,12 +1455,18 @@ async function syncFromGoogleSheets() {
 
 // Syncs custom tables and Feature Hub data to Google Sheets
 async function syncFeatureToGoogleSheet(action, data) {
-  if (!googleSheetSyncEnabled || !googleSheetUrl) return;
+  if (!googleSheetSyncEnabled || !googleSheetUrl) {
+    console.log("Sync skipped. Sync Enabled:", googleSheetSyncEnabled, "Sheets URL:", googleSheetUrl);
+    return;
+  }
   
   const payload = {
     action: action,
     data: data
   };
+  
+  console.log("syncFeatureToGoogleSheet action:", action, "Payload:", payload);
+  console.log("Target URL:", googleSheetUrl);
   
   showToast(`Syncing database...`);
   
@@ -1473,6 +1479,7 @@ async function syncFeatureToGoogleSheet(action, data) {
       },
       body: JSON.stringify(payload)
     });
+    console.log("POST request dispatched successfully.");
     showToast("Database updated successfully.");
   } catch (err) {
     console.error("Database sync error: ", err);
