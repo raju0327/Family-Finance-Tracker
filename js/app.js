@@ -1312,7 +1312,9 @@ async function syncFromGoogleSheets() {
   showToast("Downloading transaction data...");
   
   try {
-    const res = await fetch(googleSheetUrl);
+    // Use a timestamp cache-buster to prevent WebView/browser from serving cached GET responses
+    const busterUrl = googleSheetUrl + (googleSheetUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    const res = await fetch(busterUrl);
     const result = await res.json();
     
     if (result.status === 'success') {
