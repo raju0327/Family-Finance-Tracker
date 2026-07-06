@@ -429,8 +429,9 @@ const codeSnippetBox = document.getElementById('code-snippet-box');
 
 // --- INIT APP ---
 function init() {
-  // Register Service Worker for PWA compliance
-  if ('serviceWorker' in navigator) {
+  // Register Service Worker for PWA compliance (Only on secure HTTPS or local host origins)
+  const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if ('serviceWorker' in navigator && isSecure) {
     const isGithub = window.location.hostname.includes('github.io');
     const swPath = isGithub ? '/Finance-Tracker/sw.js' : './sw.js';
     navigator.serviceWorker.register(swPath)
