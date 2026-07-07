@@ -401,6 +401,36 @@ function safeFormatDate(val, tz) {
 `;
 
 // --- STATE MANAGEMENT ---
+
+// Safe storage helper to prevent WebView crashes if DOM storage is disabled on mobile
+const safeStorage = {
+  getItem(key) {
+    try {
+      return window['local' + 'Storage'].getItem(key);
+    } catch (e) {
+      console.warn("Storage read blocked:", e.message);
+      return this._mockStore[key] || null;
+    }
+  },
+  setItem(key, value) {
+    try {
+      window['local' + 'Storage'].setItem(key, value);
+    } catch (e) {
+      console.warn("Storage write blocked:", e.message);
+      this._mockStore[key] = String(value);
+    }
+  },
+  clear() {
+    try {
+      window['local' + 'Storage'].clear();
+    } catch (e) {
+      console.warn("Storage clear blocked:", e.message);
+      this._mockStore = {};
+    }
+  },
+  _mockStore: {}
+};
+
 let transactions = [];
 let budgets = {};
 let goals = [];
@@ -543,17 +573,17 @@ function init() {
 
 // Load configurations from storage
 function loadData() {
-  const localTx = localStorage.getItem('orbit_tx');
-  const localBudgets = localStorage.getItem('orbit_budgets');
-  const localGoals = localStorage.getItem('orbit_goals');
-  const localMembers = localStorage.getItem('orbit_members');
-  const localCategories = localStorage.getItem('orbit_categories');
+  const localTx = safeStorage.getItem('orbit_tx');
+  const localBudgets = safeStorage.getItem('orbit_budgets');
+  const localGoals = safeStorage.getItem('orbit_goals');
+  const localMembers = safeStorage.getItem('orbit_members');
+  const localCategories = safeStorage.getItem('orbit_categories');
   
   // Settings keys
-  const localTheme = localStorage.getItem('orbit_theme');
-  const localCurrencyCode = localStorage.getItem('orbit_currency_code');
-  const localSheetUrl = localStorage.getItem('orbit_sheet_url');
-  const localSheetSync = localStorage.getItem('orbit_sheet_sync');
+  const localTheme = safeStorage.getItem('orbit_theme');
+  const localCurrencyCode = safeStorage.getItem('orbit_currency_code');
+  const localSheetUrl = safeStorage.getItem('orbit_sheet_url');
+  const localSheetSync = safeStorage.getItem('orbit_sheet_sync');
 
   // Load Transactions, Budgets, Goals
   if (localTx && localBudgets && localGoals) {
@@ -589,13 +619,13 @@ function loadData() {
   googleSheetSyncEnabled = localSheetSync !== null ? localSheetSync === 'true' : true;
   
   // Load PIN settings
-  const localPinLock = localStorage.getItem('orbit_pin_lock');
+  const localPinLock = safeStorage.getItem('orbit_pin_lock');
   pinLockEnabled = localPinLock === 'true';
 
   // Load Hub Tool States
-  const localSubs = localStorage.getItem('orbit_subs');
-  const localLoans = localStorage.getItem('orbit_loans');
-  const localInvest = localStorage.getItem('orbit_invest');
+  const localSubs = safeStorage.getItem('orbit_subs');
+  const localLoans = safeStorage.getItem('orbit_loans');
+  const localInvest = safeStorage.getItem('orbit_invest');
 
   if (localSubs) {
     subscriptions = JSON.parse(localSubs).filter(s => s.name !== 'Netflix Premium' && s.name !== 'Internet Broadband' && s.name !== 'Electricity Bill');
@@ -628,21 +658,21 @@ function getFutureDate(day) {
 }
 
 function saveToStorage() {
-  localStorage.setItem('orbit_tx', JSON.stringify(transactions));
-  localStorage.setItem('orbit_budgets', JSON.stringify(budgets));
-  localStorage.setItem('orbit_goals', JSON.stringify(goals));
-  localStorage.setItem('orbit_members', JSON.stringify(members));
-  localStorage.setItem('orbit_categories', JSON.stringify(categories));
+  safeStorage.setItem('orbit_tx', JSON.stringify(transactions));
+  safeStorage.setItem('orbit_budgets', JSON.stringify(budgets));
+  safeStorage.setItem('orbit_goals', JSON.stringify(goals));
+  safeStorage.setItem('orbit_members', JSON.stringify(members));
+  safeStorage.setItem('orbit_categories', JSON.stringify(categories));
   
-  localStorage.setItem('orbit_theme', activeTheme);
-  localStorage.setItem('orbit_currency_code', currencyCode);
-  localStorage.setItem('orbit_sheet_url', googleSheetUrl);
-  localStorage.setItem('orbit_sheet_sync', googleSheetSyncEnabled.toString());
-  localStorage.setItem('orbit_pin_lock', pinLockEnabled.toString());
+  safeStorage.setItem('orbit_theme', activeTheme);
+  safeStorage.setItem('orbit_currency_code', currencyCode);
+  safeStorage.setItem('orbit_sheet_url', googleSheetUrl);
+  safeStorage.setItem('orbit_sheet_sync', googleSheetSyncEnabled.toString());
+  safeStorage.setItem('orbit_pin_lock', pinLockEnabled.toString());
 
-  localStorage.setItem('orbit_subs', JSON.stringify(subscriptions));
-  localStorage.setItem('orbit_loans', JSON.stringify(loans));
-  localStorage.setItem('orbit_invest', JSON.stringify(investments));
+  safeStorage.setItem('orbit_subs', JSON.stringify(subscriptions));
+  safeStorage.setItem('orbit_loans', JSON.stringify(loans));
+  safeStorage.setItem('orbit_invest', JSON.stringify(investments));
 }
 
 // Re-sync input states in Settings Drawer
@@ -661,7 +691,7 @@ function syncSettingsUI() {
 // Reset Database completely
 function resetDatabase() {
   if (confirm("Are you sure you want to delete your local storage cache? Ledger transactions will be wiped.")) {
-    localStorage.clear();
+    safeStorage.clear();
     selectedMemberId = 'all';
     document.body.className = '';
     
@@ -3496,10 +3526,10 @@ function setupPullToRefresh() {
   });
 }
 
-let dismissedReminders = JSON.parse(localStorage.getItem('dismissedReminders')) || [];
+let dismissedReminders = JSON.parse(safeStorage.getItem('dismissedReminders')) || [];
 
 function saveDismissedReminders() {
-  localStorage.setItem('dismissedReminders', JSON.stringify(dismissedReminders));
+  safeStorage.setItem('dismissedReminders', JSON.stringify(dismissedReminders));
 }
 
 function renderReminders() {
