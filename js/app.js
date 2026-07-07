@@ -1378,6 +1378,8 @@ function populateFormDropdowns() {
     });
     filterCatSelect.innerHTML = catHtml;
   }
+}
+
 // --- GOOGLE SHEETS NETWORK SYNC ---
 
 // Unified sender that falls back to JSONP (GET script injection) if standard fetch fails (CORS bypass for local file APKs)
