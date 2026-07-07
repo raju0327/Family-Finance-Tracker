@@ -892,8 +892,13 @@ function updateMetricsAndCharts() {
   const assetIncomeEl = document.getElementById('asset-track-income-val');
   const assetExpenseEl = document.getElementById('asset-track-expense-val');
   
+  const totalAvailableBalance = Math.max(0, accountBalances.cash) +
+                                Math.max(0, accountBalances.bank) +
+                                Math.max(0, accountBalances.upi) +
+                                Math.max(0, accountBalances.savings);
+  
   if (assetTotalEl) assetTotalEl.innerText = `${currencySymbol}${totalAssetsVal.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
-  if (assetAssetsEl) assetAssetsEl.innerText = `${currencySymbol}${totalInvestments.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+  if (assetAssetsEl) assetAssetsEl.innerText = `${currencySymbol}${totalAvailableBalance.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
   if (assetIncomeEl) assetIncomeEl.innerText = `+${currencySymbol}${totalIncomeVal.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
   if (assetExpenseEl) assetExpenseEl.innerText = `-${currencySymbol}${totalExpenseVal.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
   
