@@ -1179,9 +1179,13 @@ function renderBudgets() {
             ${getCategoryIconHTML(cat)}
             ${cat.name}
           </span>
-          <span class="budget-amounts">
+          <span class="budget-amounts" style="display: flex; align-items: center; gap: 4px;">
             <strong>${currencySymbol}${spent.toLocaleString(undefined, {maximumFractionDigits:0})}</strong> of 
-            ${currencySymbol}<input type="number" class="budget-limit-input" data-cat-id="${catId}" value="${limit}" style="width: 55px; background: transparent; border: none; border-bottom: 1.5px dashed var(--apple-blue); color: var(--apple-text); font-weight: 700; text-align: right; font-size: 0.72rem; padding: 0 2px;">
+            ${currencySymbol}
+            <input type="number" class="budget-limit-input" data-cat-id="${catId}" value="${limit}" style="width: 55px; background: transparent; border: none; border-bottom: 1.5px dashed var(--apple-blue); color: var(--apple-text); font-weight: 700; text-align: right; font-size: 0.72rem; padding: 0 2px;">
+            <button class="btn-save-budget" data-cat-id="${catId}" style="background: none; border: none; color: var(--apple-blue); cursor: pointer; font-size: 0.75rem; padding: 2px; display: inline-flex; align-items: center; justify-content: center;" title="Save budget">
+              <i class="fas fa-check"></i>
+            </button>
           </span>
         </div>
         <div class="progress-track">
@@ -1193,21 +1197,37 @@ function renderBudgets() {
   
   budgetsContainer.innerHTML = budgetsHtml;
   
-  // Attach inline budget limit change listeners
-  document.querySelectorAll('.budget-limit-input').forEach(input => {
-    input.addEventListener('change', () => {
-      const catId = input.getAttribute('data-cat-id');
-      const val = parseFloat(input.value);
-      if (!isNaN(val) && val >= 0) {
-        budgets[catId] = val;
-        saveToStorage();
-        syncFeatureToGoogleSheet('saveBudgets', budgets);
-        renderAll();
-        showToast(`Budget for ${categories[catId].name} updated to ${currencySymbol}${val}.`);
+  // Attach inline budget limit save button click listeners
+  document.querySelectorAll('.btn-save-budget').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const catId = btn.getAttribute('data-cat-id');
+      const input = document.querySelector(`.budget-limit-input[data-cat-id="${catId}"]`);
+      if (input) {
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val >= 0) {
+          budgets[catId] = val;
+          saveToStorage();
+          syncFeatureToGoogleSheet('saveBudgets', budgets);
+          renderAll();
+          showToast(`Budget for ${categories[catId].name} updated to ${currencySymbol}${val}.`);
+        } else {
+          showToast("Enter a valid budget limit.");
+        }
       }
     });
-    // Prevent event propagation
+  });
+  
+  document.querySelectorAll('.budget-limit-input').forEach(input => {
     input.addEventListener('click', (e) => e.stopPropagation());
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const catId = input.getAttribute('data-cat-id');
+        const btn = document.querySelector(`.btn-save-budget[data-cat-id="${catId}"]`);
+        if (btn) btn.click();
+      }
+    });
   });
   
   const totalPercent = totalLimit > 0 ? Math.min((totalSpent / totalLimit) * 100, 100) : 0;
