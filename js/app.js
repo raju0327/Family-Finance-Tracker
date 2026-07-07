@@ -5,204 +5,40 @@ const APPS_SCRIPT_CODE = `// Google Apps Script Web App for Family Finance Track
 function doPost(e) {
   try {
     var payload = JSON.parse(e.postData.contents);
-    var action = payload.action; 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    
-    // ACTION: Create a sheet tab for a new profile family member
-    if (action === "createSheet") {
-      var sheetName = payload.name;
-      var sheet = ss.getSheetByName(sheetName);
-      if (!sheet) {
-        sheet = ss.insertSheet(sheetName);
-        sheet.appendRow(["Transaction ID", "Date", "Category", "Description", "Type", "Amount"]);
-      }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Sheet created for member " + sheetName}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // ACTION: Delete a sheet tab when a family member is removed
-    if (action === "deleteSheet") {
-      var sheetName = payload.name;
-      var sheet = ss.getSheetByName(sheetName);
-      if (sheet) {
-        ss.deleteSheet(sheet);
-        return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Sheet deleted for member " + sheetName}))
-                             .setMimeType(ContentService.MimeType.JSON);
-      }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Sheet not found"}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // ACTION: Save Budgets Table
-    if (action === "saveBudgets") {
-      var sheet = ss.getSheetByName("Budgets") || ss.insertSheet("Budgets");
-      sheet.clear();
-      sheet.appendRow(["Category ID", "Limit"]);
-      var budgetsData = payload.data;
-      for (var k in budgetsData) {
-        sheet.appendRow([k, budgetsData[k]]);
-      }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Budgets saved"}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // ACTION: Save Goals Table
-    if (action === "saveGoals") {
-      var sheet = ss.getSheetByName("Savings Goals") || ss.insertSheet("Savings Goals");
-      sheet.clear();
-      sheet.appendRow(["Goal ID", "Name", "Target", "Current", "Color"]);
-      var goalsData = payload.data;
-      for (var i = 0; i < goalsData.length; i++) {
-        var g = goalsData[i];
-        sheet.appendRow([g.id, g.name, g.target, g.current, g.color]);
-      }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Goals saved"}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // ACTION: Save Subscriptions Table
-    if (action === "saveSubscriptions") {
-      var sheet = ss.getSheetByName("Subscriptions") || ss.insertSheet("Subscriptions");
-      sheet.clear();
-      sheet.appendRow(["Subscription ID", "Name", "Amount", "Due Date", "Account"]);
-      var subsData = payload.data;
-      for (var i = 0; i < subsData.length; i++) {
-        var s = subsData[i];
-        sheet.appendRow([s.id, s.name, s.amount, s.dueDate, s.account]);
-      }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Subscriptions saved"}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // ACTION: Add Loan
-    if (action === "addLoan") {
-      var sheet = ss.getSheetByName("Loan & EMI Tracker") || ss.insertSheet("Loan & EMI Tracker");
-      if (sheet.getLastRow() === 0) {
-        sheet.appendRow(["Loan ID", "Name", "Total", "EMI", "Due Date"]);
-      }
-      var l = payload.data;
-      sheet.appendRow([l.id, l.name, l.total, l.emi, l.dueDate]);
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Loan added"}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // ACTION: Delete Loan
-    if (action === "deleteLoan") {
-      var sheet = ss.getSheetByName("Loan & EMI Tracker");
-      if (sheet) {
-        var data = sheet.getDataRange().getValues();
-        var deleted = false;
-        for (var i = 1; i < data.length; i++) {
-          if (data[i][0] === payload.data.id) {
-            sheet.deleteRow(i + 1);
-            deleted = true;
-            break;
-          }
-        }
-        return ContentService.createTextOutput(JSON.stringify({status: "success", message: deleted ? "Loan row deleted" : "Loan row not found"}))
-                             .setMimeType(ContentService.MimeType.JSON);
-      }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Loan sheet not found"}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // ACTION: Update Loan (on EMI Payment)
-    if (action === "payLoan") {
-      var sheet = ss.getSheetByName("Loan & EMI Tracker");
-      if (sheet) {
-        var data = sheet.getDataRange().getValues();
-        var updated = false;
-        for (var i = 1; i < data.length; i++) {
-          if (data[i][0] === payload.data.id) {
-            sheet.getRange(i + 1, 3).setValue(payload.data.total);
-            sheet.getRange(i + 1, 5).setValue(payload.data.dueDate);
-            updated = true;
-            break;
-          }
-        }
-        return ContentService.createTextOutput(JSON.stringify({status: "success", message: updated ? "Loan balance updated" : "Loan row not found"}))
-                             .setMimeType(ContentService.MimeType.JSON);
-      }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Loan sheet not found"}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // ACTION: Save Investments Table
-    if (action === "saveInvestments") {
-      var sheet = ss.getSheetByName("Investments") || ss.insertSheet("Investments");
-      sheet.clear();
-      sheet.appendRow(["Asset Class", "Amount"]);
-      var investData = payload.data;
-      for (var k in investData) {
-        sheet.appendRow([k, investData[k]]);
-      }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Investments saved"}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // ACTION: Save Categories Table
-    if (action === "saveCategories") {
-      var sheet = ss.getSheetByName("Categories") || ss.insertSheet("Categories");
-      sheet.clear();
-      sheet.appendRow(["Category ID", "Name", "Icon", "Color", "Type"]);
-      var catData = payload.data;
-      for (var k in catData) {
-        var c = catData[k];
-        sheet.appendRow([k, c.name, c.icon, c.color, c.type]);
-      }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Categories saved"}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // TRANSACTION ACTIONS (Require specific member sheet tab)
-    var tx = payload.data;
-    var memberSheetName = tx.memberName || tx.memberId;
-    
-    var sheet = ss.getSheetByName(memberSheetName);
-    if (!sheet) {
-      sheet = ss.insertSheet(memberSheetName);
-      sheet.appendRow(["Transaction ID", "Date", "Category", "Description", "Type", "Amount"]);
-    }
-    
-    if (action === "add") {
-      sheet.appendRow([
-        tx.id, 
-        tx.date, 
-        tx.categoryName || tx.categoryId, 
-        tx.description, 
-        tx.type, 
-        tx.amount
-      ]);
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Transaction logged in " + memberSheetName}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    } else if (action === "delete") {
-      var data = sheet.getDataRange().getValues();
-      var deleted = false;
-      for (var i = 1; i < data.length; i++) {
-        if (data[i][0] === tx.id) {
-          sheet.deleteRow(i + 1);
-          deleted = true;
-          break;
-        }
-      }
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: deleted ? "Row deleted" : "Row not found"}))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify({status: "error", message: "Invalid action"}))
-                          .setMimeType(ContentService.MimeType.JSON);
+    var result = handleWriteAction(payload, ss);
+    return ContentService.createTextOutput(JSON.stringify(result))
+                         .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()}))
                          .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-// Fetch sheet tab names as profiles, and merge all rows as transactions
 function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheets = ss.getSheets();
+    var callback = e.parameter.callback;
     
+    // Check if this is a write action sent via GET (for APK / file:// CORS bypass)
+    var action = e.parameter.action;
+    if (action) {
+      var payload = {
+        action: action,
+        data: JSON.parse(e.parameter.data)
+      };
+      var result = handleWriteAction(payload, ss);
+      var resultString = JSON.stringify(result);
+      if (callback) {
+        return ContentService.createTextOutput(callback + "(" + resultString + ")")
+                             .setMimeType(ContentService.MimeType.JAVASCRIPT);
+      }
+      return ContentService.createTextOutput(resultString)
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Otherwise, perform normal read operation
+    var sheets = ss.getSheets();
     var profiles = [];
     var allTransactions = [];
     var budgets = {};
@@ -345,7 +181,7 @@ function doGet(e) {
       }
     }
     
-    return ContentService.createTextOutput(JSON.stringify({
+    var outputString = JSON.stringify({
       status: "success", 
       profiles: profiles, 
       transactions: allTransactions,
@@ -355,11 +191,186 @@ function doGet(e) {
       loans: loans,
       investments: investments,
       categories: categories
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
+    
+    if (callback) {
+      return ContentService.createTextOutput(callback + "(" + outputString + ")")
+                           .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(outputString)
+                         .setMimeType(ContentService.MimeType.JSON);
   } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()}))
+    var errString = JSON.stringify({status: "error", message: err.toString()});
+    if (callback) {
+      return ContentService.createTextOutput(callback + "(" + errString + ")")
+                           .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(errString)
                          .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+// Core write dispatcher shared by doGet and doPost
+function handleWriteAction(payload, ss) {
+  var action = payload.action;
+  
+  if (action === "createSheet") {
+    var sheetName = payload.name;
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+      sheet.appendRow(["Transaction ID", "Date", "Category", "Description", "Type", "Amount"]);
+    }
+    return {status: "success", message: "Sheet created for member " + sheetName};
+  }
+  
+  if (action === "deleteSheet") {
+    var sheetName = payload.name;
+    var sheet = ss.getSheetByName(sheetName);
+    if (sheet) {
+      ss.deleteSheet(sheet);
+      return {status: "success", message: "Sheet deleted for member " + sheetName};
+    }
+    return {status: "success", message: "Sheet not found"};
+  }
+  
+  if (action === "saveBudgets") {
+    var sheet = ss.getSheetByName("Budgets") || ss.insertSheet("Budgets");
+    sheet.clear();
+    sheet.appendRow(["Category ID", "Limit"]);
+    var budgetsData = payload.data;
+    for (var k in budgetsData) {
+      sheet.appendRow([k, budgetsData[k]]);
+    }
+    return {status: "success", message: "Budgets saved"};
+  }
+  
+  if (action === "saveGoals") {
+    var sheet = ss.getSheetByName("Savings Goals") || ss.insertSheet("Savings Goals");
+    sheet.clear();
+    sheet.appendRow(["Goal ID", "Name", "Target", "Current", "Color"]);
+    var goalsData = payload.data;
+    for (var i = 0; i < goalsData.length; i++) {
+      var g = goalsData[i];
+      sheet.appendRow([g.id, g.name, g.target, g.current, g.color]);
+    }
+    return {status: "success", message: "Goals saved"};
+  }
+  
+  if (action === "saveSubscriptions") {
+    var sheet = ss.getSheetByName("Subscriptions") || ss.insertSheet("Subscriptions");
+    sheet.clear();
+    sheet.appendRow(["Subscription ID", "Name", "Amount", "Due Date", "Account"]);
+    var subsData = payload.data;
+    for (var i = 0; i < subsData.length; i++) {
+      var s = subsData[i];
+      sheet.appendRow([s.id, s.name, s.amount, s.dueDate, s.account]);
+    }
+    return {status: "success", message: "Subscriptions saved"};
+  }
+  
+  if (action === "addLoan") {
+    var sheet = ss.getSheetByName("Loan & EMI Tracker") || ss.insertSheet("Loan & EMI Tracker");
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["Loan ID", "Name", "Total", "EMI", "Due Date"]);
+    }
+    var l = payload.data;
+    sheet.appendRow([l.id, l.name, l.total, l.emi, l.dueDate]);
+    return {status: "success", message: "Loan added"};
+  }
+  
+  if (action === "deleteLoan") {
+    var sheet = ss.getSheetByName("Loan & EMI Tracker");
+    if (sheet) {
+      var data = sheet.getDataRange().getValues();
+      var deleted = false;
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][0] === payload.data.id) {
+          sheet.deleteRow(i + 1);
+          deleted = true;
+          break;
+        }
+      }
+      return {status: "success", message: deleted ? "Loan row deleted" : "Loan row not found"};
+    }
+    return {status: "success", message: "Loan sheet not found"};
+  }
+  
+  if (action === "payLoan") {
+    var sheet = ss.getSheetByName("Loan & EMI Tracker");
+    if (sheet) {
+      var data = sheet.getDataRange().getValues();
+      var updated = false;
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][0] === payload.data.id) {
+          sheet.getRange(i + 1, 3).setValue(payload.data.total);
+          sheet.getRange(i + 1, 5).setValue(payload.data.dueDate);
+          updated = true;
+          break;
+        }
+      }
+      return {status: "success", message: updated ? "Loan balance updated" : "Loan row not found"};
+    }
+    return {status: "success", message: "Loan sheet not found"};
+  }
+  
+  if (action === "saveInvestments") {
+    var sheet = ss.getSheetByName("Investments") || ss.insertSheet("Investments");
+    sheet.clear();
+    sheet.appendRow(["Asset Class", "Amount"]);
+    var investData = payload.data;
+    for (var k in investData) {
+      sheet.appendRow([k, investData[k]]);
+    }
+    return {status: "success", message: "Investments saved"};
+  }
+  
+  if (action === "saveCategories") {
+    var sheet = ss.getSheetByName("Categories") || ss.insertSheet("Categories");
+    sheet.clear();
+    sheet.appendRow(["Category ID", "Name", "Icon", "Color", "Type"]);
+    var catData = payload.data;
+    for (var k in catData) {
+      var c = catData[k];
+      sheet.appendRow([k, c.name, c.icon, c.color, c.type]);
+    }
+    return {status: "success", message: "Categories saved"};
+  }
+  
+  // TRANSACTION ACTIONS
+  var tx = payload.data;
+  var memberSheetName = tx.memberName || tx.memberId;
+  
+  var sheet = ss.getSheetByName(memberSheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(memberSheetName);
+    sheet.appendRow(["Transaction ID", "Date", "Category", "Description", "Type", "Amount"]);
+  }
+  
+  if (action === "add") {
+    sheet.appendRow([
+      tx.id, 
+      tx.date, 
+      tx.categoryName || tx.categoryId, 
+      tx.description, 
+      tx.type, 
+      tx.amount
+    ]);
+    return {status: "success", message: "Transaction logged in " + memberSheetName};
+  } else if (action === "delete") {
+    var data = sheet.getDataRange().getValues();
+    var deleted = false;
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] === tx.id) {
+        sheet.deleteRow(i + 1);
+        deleted = true;
+        break;
+      }
+    }
+    return {status: "success", message: deleted ? "Row deleted" : "Row not found"};
+  }
+  
+  return {status: "error", message: "Invalid action"};
 }
 
 function getProfileColor(index) {
@@ -1337,12 +1348,84 @@ function populateFormDropdowns() {
     });
     filterCatSelect.innerHTML = catHtml;
   }
-}
-
 // --- GOOGLE SHEETS NETWORK SYNC ---
 
-// Fetches all sheets and synchronizes state locally (Only sheets records reflect)
-// Fetches all sheets and synchronizes state locally (Only sheets records reflect)
+// Unified sender that falls back to JSONP (GET script injection) if standard fetch fails (CORS bypass for local file APKs)
+async function sendToGoogleSheets(method, action, data) {
+  if (!googleSheetSyncEnabled || !googleSheetUrl) {
+    console.log("Sync skipped. Sync Enabled:", googleSheetSyncEnabled, "Sheets URL:", googleSheetUrl);
+    return null;
+  }
+  
+  const payload = {
+    action: action,
+    data: data
+  };
+  
+  // For backward compatibility with Apps Script root keys (like name for createSheet/deleteSheet)
+  if (data && data.name) {
+    payload.name = data.name;
+  }
+  
+  console.log("sendToGoogleSheets request:", { method, action, payload });
+  
+  // 1. Try standard fetch POST or GET
+  try {
+    if (method === 'POST') {
+      const response = await fetch(googleSheetUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      console.log("Standard POST request dispatched successfully.");
+      return { status: 'success', message: 'Request dispatched' };
+    } else {
+      const busterUrl = googleSheetUrl + (googleSheetUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+      const response = await fetch(busterUrl);
+      const resJson = await response.json();
+      console.log("Standard GET response received successfully.");
+      return resJson;
+    }
+  } catch (err) {
+    console.warn("Standard fetch failed. Attempting JSONP fallback:", err.message);
+    
+    // 2. JSONP Fallback (using GET script tag injection)
+    return new Promise((resolve, reject) => {
+      const callbackName = 'jsonp_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      
+      window[callbackName] = (resData) => {
+        delete window[callbackName];
+        const scriptEl = document.getElementById(callbackName);
+        if (scriptEl) document.body.removeChild(scriptEl);
+        console.log("JSONP response received successfully.");
+        resolve(resData);
+      };
+      
+      const script = document.createElement('script');
+      script.id = callbackName;
+      let scriptUrl = googleSheetUrl + (googleSheetUrl.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+      
+      if (action) {
+        scriptUrl += '&action=' + encodeURIComponent(action) + '&data=' + encodeURIComponent(JSON.stringify(data));
+      }
+      scriptUrl += '&_t=' + Date.now();
+      
+      script.src = scriptUrl;
+      script.onerror = (scriptErr) => {
+        delete window[callbackName];
+        const scriptEl = document.getElementById(callbackName);
+        if (scriptEl) document.body.removeChild(scriptEl);
+        reject(new Error("JSONP pipeline dispatch failed. Verify internet connection or Web App URL."));
+      };
+      
+      document.body.appendChild(script);
+    });
+  }
+}
+
 async function syncFromGoogleSheets() {
   if (!googleSheetSyncEnabled || !googleSheetUrl) return;
   
@@ -1351,12 +1434,9 @@ async function syncFromGoogleSheets() {
   showToast("Downloading transaction data...");
   
   try {
-    // Use a timestamp cache-buster to prevent WebView/browser from serving cached GET responses
-    const busterUrl = googleSheetUrl + (googleSheetUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
-    const res = await fetch(busterUrl);
-    const result = await res.json();
+    const result = await sendToGoogleSheets('GET');
     
-    if (result.status === 'success') {
+    if (result && result.status === 'success') {
       // 1. Parse Profiles (Members) dynamically from Sheet Tab Names!
       if (result.profiles && result.profiles.length > 0) {
         members = result.profiles.filter(p => p.name && typeof p.name === 'string' && ["budgets", "savings goals", "subscriptions", "loan & emi tracker", "investments", "categories", "finance tracker"].indexOf(p.name.toLowerCase()) === -1);
@@ -1365,32 +1445,12 @@ async function syncFromGoogleSheets() {
         members = [{ id: 'operator', name: 'Primary Member', role: 'Head of Family', avatar: '👨', color: '#007aff', glow: 'rgba(0, 122, 255, 0.15)' }];
       }
 
-      // Load Budgets from Sheet
-      if (result.budgets) {
-        budgets = result.budgets;
-      }
-      
-      // Load Goals from Sheet
-      if (result.goals) {
-        goals = result.goals;
-      }
-      
-      // Load Subscriptions from Sheet
-      if (result.subscriptions) {
-        subscriptions = result.subscriptions;
-      }
-      
-      // Load Loans from Sheet
-      if (result.loans) {
-        loans = result.loans;
-      }
-      
-      // Load Investments from Sheet
-      if (result.investments) {
-        investments = result.investments;
-      }
-      
-      // Load Categories from Sheet
+      // Load data structures
+      if (result.budgets) budgets = result.budgets;
+      if (result.goals) goals = result.goals;
+      if (result.subscriptions) subscriptions = result.subscriptions;
+      if (result.loans) loans = result.loans;
+      if (result.investments) investments = result.investments;
       if (result.categories && Object.keys(result.categories).length > 0) {
         categories = { ...window.CATEGORIES, ...result.categories };
       }
@@ -1398,14 +1458,14 @@ async function syncFromGoogleSheets() {
       // 2. Parse Transactions
       const fetchedTxs = [];
       if (result.transactions) {
-        result.transactions.forEach(t => {
-          // Resolve Member ID matching sheet name
+        for (var i = 0; i < result.transactions.length; i++) {
+          var t = result.transactions[i];
+          
+          // Resolve Member ID matching profile name
           let member = members.find(m => m.name === t.memberName);
           if (!member) {
-            // Backup creation
-            const newId = t.memberName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-4);
             member = {
-              id: newId,
+              id: t.memberName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
               name: t.memberName,
               role: 'Member',
               avatar: '👤',
@@ -1415,12 +1475,9 @@ async function syncFromGoogleSheets() {
             members.push(member);
           }
 
-          // Resolve Category ID matching category name
-          let categoryId = 'daily'; // default
+          let categoryId = 'daily';
           Object.keys(categories).forEach(k => {
-            if (categories[k].name === t.categoryName) {
-              categoryId = k;
-            }
+            if (categories[k].name === t.categoryName) categoryId = k;
           });
           if (t.type === 'income') categoryId = 'salary';
 
@@ -1433,21 +1490,22 @@ async function syncFromGoogleSheets() {
             type: t.type,
             amount: t.amount
           });
-        });
+        }
       }
-
+      
+      // Save locally
       transactions = fetchedTxs;
       saveToStorage();
-      renderAll();
-      populateFormDropdowns();
       
-      showToast("Sync completed successfully.");
+      // Refresh user screens
+      renderAll();
+      showToast("Download Sync Complete.");
     } else {
-      showToast("Sync warning: Empty database response.");
+      showToast(result && result.message ? result.message : "Sync response mismatch.");
     }
-  } catch (err) {
-    console.error("GET Fetch error: ", err);
-    showToast("Fetch failed. Using local cache.");
+  } catch(err) {
+    console.error("Fetch Sync error: ", err);
+    showToast("Sync Pipeline Handshake Failure.");
   } finally {
     if (syncBtnIcon) syncBtnIcon.classList.remove('syncing-spin');
   }
@@ -1455,31 +1513,9 @@ async function syncFromGoogleSheets() {
 
 // Syncs custom tables and Feature Hub data to Google Sheets
 async function syncFeatureToGoogleSheet(action, data) {
-  if (!googleSheetSyncEnabled || !googleSheetUrl) {
-    console.log("Sync skipped. Sync Enabled:", googleSheetSyncEnabled, "Sheets URL:", googleSheetUrl);
-    return;
-  }
-  
-  const payload = {
-    action: action,
-    data: data
-  };
-  
-  console.log("syncFeatureToGoogleSheet action:", action, "Payload:", payload);
-  console.log("Target URL:", googleSheetUrl);
-  
   showToast(`Syncing database...`);
-  
   try {
-    await fetch(googleSheetUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    console.log("POST request dispatched successfully.");
+    await sendToGoogleSheets('POST', action, data);
     showToast("Database updated successfully.");
   } catch (err) {
     console.error("Database sync error: ", err);
@@ -1489,24 +1525,10 @@ async function syncFeatureToGoogleSheet(action, data) {
 
 // Syncs Profile sheet additions/deletions
 async function syncProfileToGoogleSheet(action, profileName) {
-  if (!googleSheetSyncEnabled || !googleSheetUrl) return;
-  
-  const payload = {
-    action: action === 'add' ? 'createSheet' : 'deleteSheet',
-    name: profileName
-  };
-  
+  const targetAction = action === 'add' ? 'createSheet' : 'deleteSheet';
   showToast("Updating sheet tabs...");
-  
   try {
-    await fetch(googleSheetUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
+    await sendToGoogleSheets('POST', targetAction, { name: profileName });
     showToast("Sheet tabs updated.");
   } catch (err) {
     console.error("Profile sync error: ", err);
@@ -1516,8 +1538,6 @@ async function syncProfileToGoogleSheet(action, profileName) {
 
 // Syncs transaction logs to specific profile sheet tabs
 async function syncTransactionToGoogleSheet(action, transaction) {
-  if (!googleSheetSyncEnabled || !googleSheetUrl) return;
-  
   const memberObj = members.find(m => m.id === transaction.memberId);
   const categoryObj = categories[transaction.categoryId];
   
@@ -1527,22 +1547,9 @@ async function syncTransactionToGoogleSheet(action, transaction) {
     categoryName: categoryObj ? categoryObj.name : transaction.categoryId
   };
   
-  const payload = {
-    action: action,
-    data: enrichedTx
-  };
-  
   showToast("Syncing transaction...");
-  
   try {
-    await fetch(googleSheetUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
+    await sendToGoogleSheets('POST', action, enrichedTx);
     showToast("Sync completed.");
   } catch (err) {
     console.error("Transaction sync error: ", err);
@@ -1560,9 +1567,8 @@ async function testGoogleSheetConnection() {
   showToast("Connecting to Google Sheets...");
   
   try {
-    const res = await fetch(googleSheetUrl);
-    const data = await res.json();
-    if (data.status === 'success') {
+    const data = await sendToGoogleSheets('GET');
+    if (data && data.status === 'success') {
       alert(`GOOGLE SHEET CONNECTION ACTIVE:\nEndpoint is responding successfully.`);
       showToast("Handshake active.");
     } else {
