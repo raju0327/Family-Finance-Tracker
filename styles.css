@@ -470,6 +470,7 @@ body {
   background: var(--apple-bg);
   border: 1px solid var(--apple-border);
   transition: background 0.2s ease;
+  position: relative;
 }
 
 .tx-item:hover {
@@ -535,6 +536,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  margin-left: auto;
+  padding-right: 24px;
 }
 
 .tx-amount {
@@ -553,9 +556,12 @@ body {
   background: none;
   border: none;
   color: var(--apple-gray);
-  margin-left: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .tx-item:hover .btn-delete-tx {
