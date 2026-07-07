@@ -2399,7 +2399,8 @@ function openAccountDetails(accId) {
     bank: { name: 'Bank Account', icon: '🏦', color: '#007aff' },
     card: { name: 'Credit Card', icon: '💳', color: '#ff3b30' },
     upi: { name: 'UPI Wallet', icon: '📱', color: '#af52de' },
-    savings: { name: 'Savings Account', icon: '💰', color: '#ff9500' }
+    savings: { name: 'Savings Account', icon: '💰', color: '#ff9500' },
+    loans: { name: 'Loans & EMIs', icon: '💸', color: '#ff3b30' }
   };
   
   const meta = accountsMetadata[accId];
@@ -2409,46 +2410,87 @@ function openAccountDetails(accId) {
   iconBadge.innerText = meta.icon;
   iconBadge.style.background = meta.color;
   
-  let baseBalance = 0;
-  
-  const filtered = transactions.filter(t => (t.account || 'cash') === accId);
-  
-  let incomeSum = 0;
-  let expenseSum = 0;
-  filtered.forEach(t => {
-    const amt = parseFloat(t.amount);
-    if (t.type === 'income') {
-      incomeSum += amt;
-    } else {
-      expenseSum += amt;
-    }
-  });
-  const netBalance = baseBalance + incomeSum - expenseSum;
-  
-  summaryBox.innerHTML = `
-    <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700;">
-      <span>Net Account Balance:</span>
-      <strong>${currencySymbol}${netBalance.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong>
-    </div>
-    <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--apple-border); padding-top: 6px; margin-top: 4px;">
-      <span>Total Income:</span>
-      <span class="text-income">+${currencySymbol}${incomeSum.toLocaleString()}</span>
-    </div>
-    <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--apple-border); padding-top: 6px;">
-      <span>Total Expenses:</span>
-      <span class="text-expense">-${currencySymbol}${expenseSum.toLocaleString()}</span>
-    </div>
-  `;
-  
-  if (filtered.length === 0) {
-    txList.innerHTML = `
-      <div class="empty-state" style="padding: 20px 0; text-align: center; color: var(--apple-gray); font-size: 0.65rem;">
-        No transaction history for this account
+  if (accId === 'loans') {
+    const totalLoanVal = loans.reduce((sum, l) => sum + parseFloat(l.total || 0), 0);
+    const totalEmiVal = loans.reduce((sum, l) => sum + parseFloat(l.emi || 0), 0);
+    
+    summaryBox.innerHTML = `
+      <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700;">
+        <span>Total Outstanding:</span>
+        <strong class="text-expense">${currencySymbol}${totalLoanVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--apple-border); padding-top: 6px; margin-top: 4px;">
+        <span>Total Monthly EMIs:</span>
+        <span>${currencySymbol}${totalEmiVal.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--apple-border); padding-top: 6px;">
+        <span>Active Loans Count:</span>
+        <span>${loans.length} active</span>
       </div>
     `;
+    
+    if (loans.length === 0) {
+      txList.innerHTML = `
+        <div class="empty-state" style="padding: 20px 0; text-align: center; color: var(--apple-gray); font-size: 0.65rem;">
+          No active loans tracked
+        </div>
+      `;
+    } else {
+      txList.innerHTML = loans.map(l => `
+        <div class="transaction-item" style="padding: 10px; margin-bottom: 8px; background: var(--apple-bg); border-radius: var(--border-radius-md); display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--apple-border);">
+          <div>
+            <div style="font-weight: 700; font-size: 0.75rem; color: var(--apple-text);">${l.name}</div>
+            <div style="font-size: 0.58rem; color: var(--apple-text-secondary);">EMI: ${currencySymbol}${parseFloat(l.emi).toLocaleString()} | Due: ${l.dueDate}</div>
+          </div>
+          <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+            <div style="font-weight: 700; font-size: 0.75rem; color: var(--apple-red);">${currencySymbol}${parseFloat(l.total).toLocaleString()}</div>
+            <button onclick="closeOverlay(document.getElementById('account-details-overlay')); payEMI('${l.id}')" style="font-size: 0.55rem; padding: 2px 6px; background: var(--apple-blue); color: white; border: none; border-radius: 4px; cursor: pointer;">Pay EMI</button>
+          </div>
+        </div>
+      `).join('');
+    }
   } else {
-    txList.innerHTML = filtered.map(t => getTransactionRowHTML(t)).join('');
-    attachDeleteHandlers();
+    let baseBalance = 0;
+    
+    const filtered = transactions.filter(t => (t.account || 'cash') === accId);
+    
+    let incomeSum = 0;
+    let expenseSum = 0;
+    filtered.forEach(t => {
+      const amt = parseFloat(t.amount);
+      if (t.type === 'income') {
+        incomeSum += amt;
+      } else {
+        expenseSum += amt;
+      }
+    });
+    const netBalance = baseBalance + incomeSum - expenseSum;
+    
+    summaryBox.innerHTML = `
+      <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700;">
+        <span>Net Account Balance:</span>
+        <strong>${currencySymbol}${netBalance.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--apple-border); padding-top: 6px; margin-top: 4px;">
+        <span>Total Income:</span>
+        <span class="text-income">+${currencySymbol}${incomeSum.toLocaleString()}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--apple-border); padding-top: 6px;">
+        <span>Total Expenses:</span>
+        <span class="text-expense">-${currencySymbol}${expenseSum.toLocaleString()}</span>
+      </div>
+    `;
+    
+    if (filtered.length === 0) {
+      txList.innerHTML = `
+        <div class="empty-state" style="padding: 20px 0; text-align: center; color: var(--apple-gray); font-size: 0.65rem;">
+          No transaction history for this account
+        </div>
+      `;
+    } else {
+      txList.innerHTML = filtered.map(t => getTransactionRowHTML(t)).join('');
+      attachDeleteHandlers();
+    }
   }
   
   overlay.classList.add('active');
@@ -2497,7 +2539,8 @@ function renderAccountsSlider() {
     bank: 0,
     card: 0,
     upi: 0,
-    savings: 0
+    savings: 0,
+    loans: 0
   };
   
   transactions.forEach(t => {
@@ -2510,13 +2553,18 @@ function renderAccountsSlider() {
       }
     }
   });
+
+  // Calculate total outstanding loan balance
+  const totalLoanVal = loans.reduce((sum, l) => sum + parseFloat(l.total || 0), 0);
+  accountsBalances.loans = totalLoanVal;
   
   const accountsMetadata = {
     cash: { name: 'Cash', icon: '💵', color: '#34c759' },
     bank: { name: 'Bank Account', icon: '🏦', color: '#007aff' },
     card: { name: 'Credit Card', icon: '💳', color: '#ff3b30' },
     upi: { name: 'UPI Wallet', icon: '📱', color: '#af52de' },
-    savings: { name: 'Savings Account', icon: '💰', color: '#ff9500' }
+    savings: { name: 'Savings Account', icon: '💰', color: '#ff9500' },
+    loans: { name: 'Owed Loans', icon: '💸', color: '#ff3b30' }
   };
   
   carousel.innerHTML = Object.keys(accountsMetadata).map(key => {
@@ -2524,11 +2572,17 @@ function renderAccountsSlider() {
     const meta = accountsMetadata[key];
     const sign = bal < 0 ? '-' : '';
     const absBal = Math.abs(bal);
+    
+    const isLoans = key === 'loans';
+    const balanceText = isLoans 
+      ? `${currencySymbol}${absBal.toLocaleString(undefined, {maximumFractionDigits: 0})}` 
+      : `${sign}${currencySymbol}${absBal.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+    
     return `
       <div class="account-slide-card" style="border-left: 3.5px solid ${meta.color}; cursor: pointer;" onclick="openAccountDetails('${key}')">
         <span class="account-slide-icon">${meta.icon}</span>
         <span class="account-slide-name">${meta.name}</span>
-        <span class="account-slide-balance">${sign}${currencySymbol}${absBal.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+        <span class="account-slide-balance">${balanceText}</span>
       </div>
     `;
   }).join('');
