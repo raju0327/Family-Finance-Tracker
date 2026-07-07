@@ -588,7 +588,7 @@ function loadData() {
   // Load Transactions, Budgets, Goals
   if (localTx && localBudgets && localGoals) {
     transactions = JSON.parse(localTx);
-    budgets = JSON.parse(localBudgets);
+    budgets = { ...window.INITIAL_BUDGETS, ...JSON.parse(localBudgets) };
     goals = JSON.parse(localGoals);
   } else {
     transactions = [];

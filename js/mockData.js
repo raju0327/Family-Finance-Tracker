@@ -18,6 +18,7 @@ window.CATEGORIES = {
   health: { name: 'Health & Medical', icon: 'fa-heartbeat', color: '#34c759', type: 'expense' },
   education: { name: 'Education', icon: 'fa-graduation-cap', color: '#00c7e2', type: 'expense' },
   investments: { name: 'Investments', icon: 'fa-chart-line', color: '#a2a2a2', type: 'expense' },
+  basic: { name: 'Basic Needs', icon: 'fa-check-square', color: '#ff9500', type: 'expense' },
   
   // Income Categories
   salary: { name: 'Salary', icon: 'fa-wallet', color: '#34c759', type: 'income' },
@@ -50,7 +51,8 @@ window.INITIAL_BUDGETS = {
   entertainment: 8000,
   health: 10000,
   education: 15000,
-  investments: 25000
+  investments: 25000,
+  basic: 10000
 };
 
 window.INITIAL_GOALS = [
