@@ -457,6 +457,7 @@ let enteredPin = '';
 let subscriptions = [];
 let loans = [];
 let investments = {};
+let editingBudgets = {};
 let calendarYear = new Date().getFullYear();
 let calendarMonth = new Date().getMonth();
 
@@ -1172,6 +1173,28 @@ function renderBudgets() {
     if (percent >= 90) warningClass = 'danger';
     else if (percent >= 75) warningClass = 'warning';
     
+    const isEditing = editingBudgets[catId];
+    
+    let budgetAmountsHtml = '';
+    if (isEditing) {
+      budgetAmountsHtml = `
+        <strong>${currencySymbol}${spent.toLocaleString(undefined, {maximumFractionDigits:0})}</strong> of 
+        ${currencySymbol}
+        <input type="number" class="budget-limit-input" data-cat-id="${catId}" value="${limit}" style="width: 55px; background: transparent; border: none; border-bottom: 1.5px dashed var(--apple-blue); color: var(--apple-text); font-weight: 700; text-align: right; font-size: 0.72rem; padding: 0 2px;">
+        <button class="btn-save-budget" data-cat-id="${catId}" style="background: none; border: none; color: var(--apple-blue); cursor: pointer; font-size: 0.75rem; padding: 2px; display: inline-flex; align-items: center; justify-content: center;" title="Save budget">
+          <i class="fas fa-check"></i>
+        </button>
+      `;
+    } else {
+      budgetAmountsHtml = `
+        <strong>${currencySymbol}${spent.toLocaleString(undefined, {maximumFractionDigits:0})}</strong> of 
+        <strong>${currencySymbol}${limit.toLocaleString(undefined, {maximumFractionDigits:0})}</strong>
+        <button class="btn-edit-budget-trigger" data-cat-id="${catId}" style="background: none; border: none; color: var(--apple-gray); cursor: pointer; font-size: 0.65rem; padding: 2px; display: inline-flex; align-items: center; justify-content: center; margin-left: 4px;" title="Edit budget">
+          <i class="fas fa-pencil-alt"></i>
+        </button>
+      `;
+    }
+    
     budgetsHtml += `
       <div class="glass-panel budget-item">
         <div class="budget-meta">
@@ -1180,12 +1203,7 @@ function renderBudgets() {
             ${cat.name}
           </span>
           <span class="budget-amounts" style="display: flex; align-items: center; gap: 4px;">
-            <strong>${currencySymbol}${spent.toLocaleString(undefined, {maximumFractionDigits:0})}</strong> of 
-            ${currencySymbol}
-            <input type="number" class="budget-limit-input" data-cat-id="${catId}" value="${limit}" style="width: 55px; background: transparent; border: none; border-bottom: 1.5px dashed var(--apple-blue); color: var(--apple-text); font-weight: 700; text-align: right; font-size: 0.72rem; padding: 0 2px;">
-            <button class="btn-save-budget" data-cat-id="${catId}" style="background: none; border: none; color: var(--apple-blue); cursor: pointer; font-size: 0.75rem; padding: 2px; display: inline-flex; align-items: center; justify-content: center;" title="Save budget">
-              <i class="fas fa-check"></i>
-            </button>
+            ${budgetAmountsHtml}
           </span>
         </div>
         <div class="progress-track">
@@ -1197,6 +1215,16 @@ function renderBudgets() {
   
   budgetsContainer.innerHTML = budgetsHtml;
   
+  // Attach inline budget limit edit trigger click listeners
+  document.querySelectorAll('.btn-edit-budget-trigger').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const catId = btn.getAttribute('data-cat-id');
+      editingBudgets[catId] = true;
+      renderBudgets();
+    });
+  });
+  
   // Attach inline budget limit save button click listeners
   document.querySelectorAll('.btn-save-budget').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -1207,6 +1235,7 @@ function renderBudgets() {
         const val = parseFloat(input.value);
         if (!isNaN(val) && val >= 0) {
           budgets[catId] = val;
+          editingBudgets[catId] = false;
           saveToStorage();
           syncFeatureToGoogleSheet('saveBudgets', budgets);
           renderAll();
