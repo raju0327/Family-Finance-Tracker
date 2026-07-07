@@ -281,5 +281,167 @@ window.Charts = {
                 style="filter: drop-shadow(0 0 3px ${color});" />
       </svg>
     `;
+  },
+
+  /**
+   * Renders a glowing comparative multi-line chart
+   */
+  renderMultiLineChart(containerId, seriesList, currencySymbol = '₹') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    if (!seriesList || seriesList.length === 0 || !seriesList[0].points || seriesList[0].points.length === 0) {
+      container.innerHTML = `<div class="no-data" style="color: var(--apple-gray); font-size: 0.65rem; padding: 20px; text-align: center;">No Comparison Data Available</div>`;
+      return;
+    }
+    
+    const width = 500;
+    const height = 220;
+    const paddingX = 45;
+    const paddingY = 30;
+    
+    let allValues = [];
+    seriesList.forEach(s => {
+      s.points.forEach(pt => allValues.push(pt.value));
+    });
+    const maxVal = Math.max(...allValues, 100) * 1.1;
+    const minVal = 0;
+    
+    const pointsLength = seriesList[0].points.length;
+    
+    let pathsSvg = '';
+    let areaPathsSvg = '';
+    let pointsSvg = '';
+    let legendHtml = '<div style="display: flex; gap: 16px; justify-content: center; margin-top: 10px; font-size: 0.65rem; font-weight: 600; flex-wrap: wrap;">';
+    
+    seriesList.forEach((series, sIdx) => {
+      const color = series.color;
+      const gradId = `line-grad-${sIdx}`;
+      const areaGradId = `area-grad-${sIdx}`;
+      
+      const svgPoints = series.points.map((p, i) => {
+        const x = paddingX + (i * (width - 2 * paddingX) / (pointsLength - 1 || 1));
+        const y = height - paddingY - ((p.value - minVal) * (height - 2 * paddingY) / (maxVal - minVal));
+        return { x, y, label: p.label, value: p.value };
+      });
+      
+      let pathD = '';
+      if (svgPoints.length > 0) {
+        pathD = `M ${svgPoints[0].x} ${svgPoints[0].y}`;
+        for (let i = 1; i < svgPoints.length; i++) {
+          const p0 = svgPoints[i - 1];
+          const p1 = svgPoints[i];
+          const cpX1 = p0.x + (p1.x - p0.x) / 2;
+          const cpY1 = p0.y;
+          const cpX2 = p0.x + (p1.x - p0.x) / 2;
+          const cpY2 = p1.y;
+          pathD += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${p1.x} ${p1.y}`;
+        }
+      }
+      
+      let areaD = '';
+      if (svgPoints.length > 0) {
+        areaD = `${pathD} L ${svgPoints[svgPoints.length - 1].x} ${height - paddingY} L ${svgPoints[0].x} ${height - paddingY} Z`;
+      }
+      
+      pathsSvg += `
+        <path d="${pathD}" fill="none" stroke="${color}" stroke-width="3" filter="url(#chart-glow)" stroke-linecap="round" />
+      `;
+      
+      areaPathsSvg += `
+        <path d="${areaD}" fill="url(#${areaGradId})" />
+      `;
+      
+      svgPoints.forEach(pt => {
+        pointsSvg += `
+          <g class="chart-point-group">
+            <circle cx="${pt.x}" cy="${pt.y}" r="8" fill="${color}" opacity="0" class="chart-point-hover" />
+            <circle cx="${pt.x}" cy="${pt.y}" r="3.5" fill="#ffffff" stroke="${color}" stroke-width="2.5" class="chart-point" />
+            <title>${series.name} - ${pt.label}: ${currencySymbol}${pt.value.toLocaleString()}</title>
+          </g>
+        `;
+      });
+      
+      pathsSvg += `
+        <defs>
+          <linearGradient id="${areaGradId}" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="${color}" stop-opacity="0.15" />
+            <stop offset="100%" stop-color="${color}" stop-opacity="0.0" />
+          </linearGradient>
+        </defs>
+      `;
+      
+      legendHtml += `
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${color}; display: inline-block;"></span>
+          <span style="color: var(--apple-text);">${series.name}</span>
+        </div>
+      `;
+    });
+    
+    legendHtml += '</div>';
+    
+    let gridLines = '';
+    const yTicks = 4;
+    for (let i = 0; i <= yTicks; i++) {
+      const val = minVal + (i * (maxVal - minVal) / yTicks);
+      const y = height - paddingY - (i * (height - 2 * paddingY) / yTicks);
+      
+      let displayVal = Math.round(val);
+      if (displayVal >= 1000000) {
+        displayVal = (displayVal / 1000000).toFixed(1) + 'M';
+      } else if (displayVal >= 1000) {
+        displayVal = (displayVal / 1000).toFixed(0) + 'K';
+      }
+      
+      gridLines += `
+        <line x1="${paddingX}" y1="${y}" x2="${width - paddingX}" y2="${y}" stroke="rgba(255, 255, 255, 0.05)" stroke-dasharray="4 4" />
+        <text x="${paddingX - 8}" y="${y + 4}" text-anchor="end" class="chart-axis-text">${currencySymbol}${displayVal}</text>
+      `;
+    }
+    
+    let xLabels = '';
+    const firstSeriesPoints = seriesList[0].points;
+    firstSeriesPoints.forEach((pt, i) => {
+      const x = paddingX + (i * (width - 2 * paddingX) / (pointsLength - 1 || 1));
+      const showLabel = pointsLength <= 7 || i % Math.ceil(pointsLength / 6) === 0 || i === pointsLength - 1;
+      if (showLabel) {
+        xLabels += `
+          <text x="${x}" y="${height - paddingY + 18}" text-anchor="middle" class="chart-axis-text">${pt.label}</text>
+        `;
+      }
+    });
+    
+    let svgContent = `
+      <svg viewBox="0 0 ${width} ${height}" class="line-chart-svg">
+        <defs>
+          <filter id="chart-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        
+        <!-- Grid lines -->
+        ${gridLines}
+        
+        <!-- Areas under lines -->
+        ${areaPathsSvg}
+        
+        <!-- Trend Lines -->
+        ${pathsSvg}
+        
+        <!-- Interactive Points -->
+        ${pointsSvg}
+        
+        <!-- X axis labels -->
+        ${xLabels}
+      </svg>
+      ${legendHtml}
+    `;
+    
+    container.innerHTML = svgContent;
   }
 };

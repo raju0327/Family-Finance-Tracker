@@ -387,16 +387,35 @@ body {
 .line-chart-svg {
   width: 100%;
   height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.05));
+  overflow: visible;
 }
 
 .chart-axis-text {
-  font-size: 9px;
-  font-weight: 500;
+  font-size: 8px;
+  font-weight: 600;
   fill: var(--apple-text-secondary);
+  opacity: 0.85;
 }
 
 .chart-point {
   cursor: pointer;
+  transition: r 0.25s cubic-bezier(0.4, 0, 0.2, 1), stroke-width 0.25s ease;
+}
+
+.chart-point:hover {
+  r: 6px;
+  stroke-width: 4px;
+}
+
+.chart-point-hover {
+  cursor: pointer;
+}
+
+.chart-point-group:hover .chart-point {
+  r: 6px;
+  stroke-width: 4px;
 }
 
 .no-data {
@@ -1528,12 +1547,13 @@ body.theme-futuristic .radial-progress-circle-bar {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  transition: all 0.25s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
   box-sizing: border-box;
 }
 .account-slide-card:hover {
-  border-color: var(--apple-border-hover);
-  transform: translateY(-1px);
+  border-color: var(--apple-blue);
+  transform: scale(1.03) translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
 }
 .account-slide-icon {
   font-size: 1.1rem;

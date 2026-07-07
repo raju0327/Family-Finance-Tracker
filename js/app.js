@@ -443,7 +443,7 @@ let currentView = 'dashboard-view';
 let transactionType = 'expense';
 
 // Settings States
-let activeTheme = 'cyber-glass';
+let activeTheme = 'modern-light';
 let currencySymbol = '₹'; // Default to Indian Rupee!
 let currencyCode = 'INR';
 let googleSheetUrl = 'https://script.google.com/macros/s/AKfycbwBgR14Sfj5jvaMqCaJ3tVEdhDjYRn5LgGf8ihBkYeK6ePYUYn6ov_Ax0w6zl0mSPky1A/exec';
@@ -859,6 +859,83 @@ function updateMetricsAndCharts() {
     if (member) chartLineColor = member.color;
   }
   window.Charts.renderLineChart('line-chart-container', chartPoints, chartLineColor, currencySymbol);
+
+  // 3. Asset Track calculations
+  const accountBalances = { cash: 0, bank: 0, card: 0, upi: 0, savings: 0 };
+  transactions.forEach(t => {
+    const acc = t.account || 'cash';
+    if (accountBalances[acc] !== undefined) {
+      if (t.type === 'income') {
+        accountBalances[acc] += parseFloat(t.amount);
+      } else {
+        accountBalances[acc] -= parseFloat(t.amount);
+      }
+    }
+  });
+
+  const totalInvestments = Object.values(investments).reduce((sum, val) => sum + parseFloat(val || 0), 0);
+  const totalAssetsVal = Math.max(0, accountBalances.cash) +
+                         Math.max(0, accountBalances.bank) +
+                         Math.max(0, accountBalances.upi) +
+                         Math.max(0, accountBalances.savings) +
+                         totalInvestments;
+  
+  const totalLoans = loans.reduce((sum, l) => sum + parseFloat(l.total || 0), 0);
+  const creditCardDebt = Math.max(0, -accountBalances.card);
+  const netWorthVal = totalAssetsVal - totalLoans - creditCardDebt;
+  
+  const totalIncomeVal = incomeSum;
+  const totalExpenseVal = expenseSum;
+  
+  const assetTotalEl = document.getElementById('asset-track-total-val');
+  const assetAssetsEl = document.getElementById('asset-track-assets-val');
+  const assetIncomeEl = document.getElementById('asset-track-income-val');
+  const assetExpenseEl = document.getElementById('asset-track-expense-val');
+  
+  if (assetTotalEl) assetTotalEl.innerText = `${currencySymbol}${netWorthVal.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+  if (assetAssetsEl) assetAssetsEl.innerText = `${currencySymbol}${totalAssetsVal.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+  if (assetIncomeEl) assetIncomeEl.innerText = `+${currencySymbol}${totalIncomeVal.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+  if (assetExpenseEl) assetExpenseEl.innerText = `-${currencySymbol}${totalExpenseVal.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+  
+  // Comparative double line chart: Income vs Expense trends
+  const incomeSeries = { name: 'Income', color: '#34c759', points: [] };
+  const expenseSeries = { name: 'Expense', color: '#ff3b30', points: [] };
+  
+  const dailyIncomeMap = {};
+  const dailyExpenseMap = {};
+  filtered.forEach(t => {
+    if (t.type === 'income') {
+      dailyIncomeMap[t.date] = (dailyIncomeMap[t.date] || 0) + parseFloat(t.amount);
+    } else {
+      dailyExpenseMap[t.date] = (dailyExpenseMap[t.date] || 0) + parseFloat(t.amount);
+    }
+  });
+  
+  if (lastDates.length < 4) {
+    const today = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const incVal = dailyIncomeMap[dateStr] || 0;
+      const expVal = dailyExpenseMap[dateStr] || 0;
+      
+      const parts = d.toDateString().split(' ');
+      const label = `${parts[1]} ${parts[2]}`;
+      incomeSeries.points.push({ label, value: incVal });
+      expenseSeries.points.push({ label, value: expVal });
+    }
+  } else {
+    lastDates.forEach(dateStr => {
+      const d = new Date(dateStr + 'T00:00:00');
+      const parts = d.toDateString().split(' ');
+      const label = `${parts[1]} ${parts[2]}`;
+      incomeSeries.points.push({ label, value: dailyIncomeMap[dateStr] || 0 });
+      expenseSeries.points.push({ label, value: dailyExpenseMap[dateStr] || 0 });
+    });
+  }
+  
+  window.Charts.renderMultiLineChart('asset-multi-chart-container', [incomeSeries, expenseSeries], currencySymbol);
 }
 
 // Renders the legends of the donut breakdown
