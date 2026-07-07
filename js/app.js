@@ -524,7 +524,7 @@ function init() {
   const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   if ('serviceWorker' in navigator && isSecure) {
     const isGithub = window.location.hostname.includes('github.io');
-    const swPath = isGithub ? '/Finance-Tracker/sw.js' : './sw.js';
+    const swPath = isGithub ? '/Family-Finance-Tracker/sw.js' : './sw.js';
     navigator.serviceWorker.register(swPath)
       .then(() => console.log('Service Worker Registered:', swPath))
       .catch(err => console.error('Service Worker Registry Failed:', err));
