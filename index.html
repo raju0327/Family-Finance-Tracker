@@ -718,6 +718,12 @@
           <input type="number" id="contribution-amount-input" class="glass-input" required min="1" step="1"
             placeholder="0" style="font-weight: 600; font-size: 1.1rem; color: var(--apple-green);">
         </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label>Assign to Profile Member</label>
+          <select id="contribution-member-select" class="glass-select" style="width: 100%;" required>
+            <!-- Populated dynamically -->
+          </select>
+        </div>
         <button type="submit" class="glass-submit-btn"
           style="background: var(--apple-green); box-shadow: 0 4px 10px rgba(52, 199, 89, 0.15);">Add
           Contribution</button>

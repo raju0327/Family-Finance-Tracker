@@ -1265,6 +1265,23 @@ function renderGoals() {
       contributionGoalLabel.innerText = `Contribute to ${name}`;
       contributionAmountInput.value = '';
       
+      // Populate member select and default to Seetha if exists
+      const memberSelect = document.getElementById('contribution-member-select');
+      if (memberSelect) {
+        let memHtml = '';
+        members.forEach(m => {
+          memHtml += `<option value="${m.id}">${m.name}</option>`;
+        });
+        memberSelect.innerHTML = memHtml;
+        
+        const seetha = members.find(m => m.name.toLowerCase().includes('seetha') || m.id.toLowerCase().includes('seetha'));
+        if (seetha) {
+          memberSelect.value = seetha.id;
+        } else {
+          memberSelect.value = (selectedMemberId !== 'all') ? selectedMemberId : (members[0] ? members[0].id : '');
+        }
+      }
+      
       const submitBtn = goalForm.querySelector('.glass-submit-btn');
       submitBtn.style.background = color;
       submitBtn.style.boxShadow = `0 4px 10px rgba(${hexToRgb(color)}, 0.15)`;
@@ -1947,6 +1964,9 @@ function setupEventListeners() {
       return;
     }
     
+    const memberSelect = document.getElementById('contribution-member-select');
+    const targetMemberId = memberSelect ? memberSelect.value : (selectedMemberId === 'all' ? members[0].id : selectedMemberId);
+    
     const goal = goals.find(g => g.id === goalId);
     if (goal) {
       goal.current += amount;
@@ -1954,7 +1974,7 @@ function setupEventListeners() {
       const newTx = {
         id: 'tx-' + Date.now(),
         type: 'expense',
-        memberId: selectedMemberId === 'all' ? members[0].id : selectedMemberId,
+        memberId: targetMemberId,
         categoryId: 'investments',
         amount,
         date: new Date().toISOString().split('T')[0],
